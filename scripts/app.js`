@@ -1,0 +1,861 @@
+(function() {
+  /* ============================================================
+     SYNAPSE — Institutional Wellbeing Platform
+     Core Application Logic (app.js)
+     ============================================================ */
+
+  let user = null;
+
+  // --- UTILS ---
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => document.querySelectorAll(sel);
+  const escapeHtml = (str) => {
+    if (!str) return '';
+    return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]));
+  };
+
+  const api = async (endpoint, options = {}) => {
+    const url = `/api${endpoint}`;
+    const headers = { 'Content-Type': 'application:json' };
+    if (user && user.token) headers['Authorization'] = `Bearer ${user.token}`;
+
+    try {
+      const res = await fetch(url, { ...options, headers });
+      if (res.status === 401) {
+        user = null;
+        $('#nav-user').innerHTML = '';
+        App.navigateTo('home');
+        throw new Error('Unauthorized');
+      }
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || `API Error ${res.status}`);
+      }
+      return await res.json();
+    } catch (e) {
+      console.error(`API Exception [${endpoint}]:`, e);
+      throw e;
+    }
+  };
+
+  const showToast = (msg, type = 'info') => {
+    const t = document.createElement('div');
+    t.className = `toast toast-${type}`;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.classList.add('show'), 10);
+    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 500); }, 4000);
+  };
+
+  const openModal = (html) => {
+    const m = $('#generic-modal');
+    if (!m) return;
+    $('#generic-modal-content').innerHTML = html;
+    m.classList.remove('hidden');
+  };
+
+  /* ============================================================
+     AUTHENTICATION
+     ============================================================ */
+  const bindAuthOpen = () => {
+    const btn = $('#auth-modal-trigger');
+    if (!btn) return;
+    btn.onclick = () => $('#auth-modal').classList.remove('hidden');
+  };
+
+  const bindAuthModal = () => {
+    const form = $('#auth-form');
+    if (!form) return;
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const id = $('#auth-id').value;
+      const pass = $('#auth-pass').value;
+      try {
+        const r = await api('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ id, pass })
+        });
+        user = r.user;
+        localStorage.setItem('synapse_user', JSON.stringify(user));
+        $('#auth-modal').classList.add('hidden');
+        App.initUserUI();
+        App.navigateTo('dashboard');
+        showToast(`Welcome back, ${user.name}`);
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    };
+  };
+
+  const renderAuth = () => {
+    const stored = localStorage.getItem('synapse_user');
+    if (stored) {
+      user = JSON.parse(stored);
+      App.initUserUI();
+    }
+  };
+
+  /* ============================================================
+     NAVIGATION & UI STATE
+     ============================================================ */
+  const bindNav = () => {
+    const links = $('#nav-links');
+    if (!links) return;
+    // Nav is dynamically updated in initUserUI
+  };
+
+  const initUserUI = () => {
+    if (!user) return;
+    const links = $('#nav-links');
+    if (!links) return;
+
+    const roleLinks = {
+      personnel: [
+        { label: 'Dashboard', slug: 'dashboard', icon: '📊' },
+        { label: 'Screening', slug: 'screening', icon: '📝' },
+        { label: 'AI Friend', slug: 'ai-friend', icon: '🤖' },
+        { label: 'Recovery', slug: 'recovery', icon: '🧘' },
+        { label: 'Counsellors', slug: 'counsellors', icon: '👥' },
+        { label: 'Research', slug: 'research', icon: '📚' },
+        { label: 'Privacy', slug: 'privacy', icon: '🔒' },
+      ],
+      counsellor: [
+        { label: 'Dashboard', slug: 'dashboard', icon: '📊' },
+        { label: 'My Patients', slug: 'patients', icon: '👥' },
+        { label: 'Appointments', slug: 'appointments', icon: '📅' },
+        { label: 'Recovery', slug: 'recovery', icon: '🧘' },
+      ],
+      welfare_officer: [
+        { label: 'Dashboard', slug: 'dashboard', icon: '📊' },
+        { label: 'Command Centre', slug: 'welfare', icon: '🛡️' },
+        { label: 'Personnel', slug: 'personnel', icon: '👥' },
+        { label: 'Research', slug: 'research', icon: '📚' },
+      ],
+      commander: [
+        { label: 'Dashboard', slug: 'dashboard', icon: '📊' },
+        { label: 'Unit Overview', slug: 'commander', icon: '🦅' },
+        { label: 'Welfare', slug: 'welfare', icon: '🛡️' },
+      ],
+      admin: [
+        { label: 'Dashboard', slug: 'dashboard', icon: '📊' },
+        { label: 'System Admin', slug: 'admin', icon: '⚙️' },
+        { label: 'Welfare', slug: 'welfare', icon: '🛡️' },
+        { label: 'Commander', slug: 'commander', icon: '🦅' },
+      ]
+    };
+
+    const myLinks = roleLinks[user.role] || roleLinks.personnel;
+    links.innerHTML = myLinks.map(l => `<a href="#" class="nav-link" data-slug="${l.slug}">${l.icon} ${l.label}</a>`).join('');
+
+    $$('.nav-link').forEach(l => {
+      l.onclick = (e) => {
+        e.preventDefault();
+        App.navigateTo(l.dataset.slug);
+      };
+    });
+
+    const userTrigger = $('#nav-user');
+    if (userTrigger) {
+      userTrigger.innerHTML = `
+        <div class="user-profile-trigger">
+          <div class="user-avatar">${user.name[0]}</div>
+          <div class="user-name">${user.name}</div>
+        </div>
+        <button id="theme-toggle" class="theme-btn">
+          <span class="theme-icon">🌙</span>
+        </button>
+      `;
+      $('#theme-toggle').onclick = toggleTheme;
+    }
+  };
+
+  const toggleTheme = () => {
+    const body = document.body;
+    const isDark = body.classList.contains('dark-theme');
+    body.classList.toggle('dark-theme', !isDark);
+    body.classList.toggle('light-theme', isDark);
+    $('#theme-toggle .theme-icon').textContent = isDark ? '🌙' : '☀️';
+    localStorage.setItem('synapse_theme', isDark ? 'dark-theme' : 'light-theme');
+  };
+
+  /* ============================================================
+     CHECK-IN & SCREENING
+     ============================================================ */
+  const bindCheckin = () => {
+    // Triggered by a separate "Log Check-in" button in Dashboard
+  };
+
+  const bindScreening = () => {
+    const nextBtn = $('#screening-next');
+    const prevBtn = $('#screening-prev');
+    if (!nextBtn || !prevBtn) return;
+
+    let currentStep = 0;
+    const answers = {};
+
+    const renderStep = () => {
+      const qs = document.getElementById('screening-qs');
+      if (!qs) return;
+
+      // We'll fetch actual questions from /api/screening if available,
+      // but for now we assume they are rendered via a state machine.
+      // This is a simplified version.
+    };
+
+    nextBtn.onclick = async () => {
+      // Logic to move forward or submit
+    };
+    prevBtn.onclick = () => {
+      // Logic to move back
+    };
+  };
+
+  const renderScreening = async () => {
+    // Initial render of the screening layout
+  };
+
+  /* ============================================================
+     AI FRIEND & VOICE
+     ============================================================ */
+  const bindChat = () => {
+    const form = $('#ai-friend-form');
+    if (!form) return;
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const input = $('#ai-friend-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      appendAIMessage('user', text);
+      input.value = '';
+      $('#ai-friend-typing').classList.remove('hidden');
+
+      try {
+        const r = await api('/chat', {
+          method: 'POST',
+          body: JSON.stringify({ content: text })
+        });
+        appendAIMessage('assistant', r.reply, r.crisis);
+        if (r.crisis) {
+          $('#crisis-modal').classList.remove('hidden');
+        }
+      } catch (e) {
+        appendAIMessage('assistant', 'Sorry, I had trouble responding. Please try again.');
+      } finally {
+        $('#ai-friend-typing').classList.add('hidden');
+      }
+    };
+  };
+
+  const appendAIMessage = (role, text, isCrisis) => {
+    const conv = $('#ai-friend-conv');
+    if (!conv) return;
+    const div = document.createElement('div');
+    div.className = 'ai-msg ' + role + (isCrisis ? ' crisis' : '');
+    div.textContent = text;
+    conv.appendChild(div);
+    conv.scrollTop = conv.scrollHeight;
+  };
+
+  const bindVoice = () => {
+    // voice interface logic
+  };
+
+  /* ============================================================
+     RECOVERY STUDIO
+     ============================================================ */
+  const bindRecovery = () => {
+    // recovery logic
+  };
+
+  /* ============================================================
+     COUNSELLORS & APPOINTMENTS
+     ============================================================ */
+  const bindCounsellorFilters = () => {
+    const btn = $('#btn-filter-counsellors');
+    if (!btn) return;
+    btn.onclick = () => {
+      const spec = $('#filter-specialty').value;
+      const lang = $('#filter-language').value;
+      const rat = $('#filter-rating').value;
+      const url = `/api/counsellors?specialization=${spec}&language=${lang}&minRating=${rat}`;
+      // call updateCounsellors(url)
+    };
+  };
+
+  /* ============================================================
+     RESEARCH & PRIVACY
+     ============================================================ */
+  const bindResourceFilters = () => {
+    const btn = $('#btn-filter-research');
+    if (!btn) return;
+    btn.onclick = () => {
+      const topic = $('#filter-research').value;
+      // call updateResearch(topic)
+    };
+  };
+
+  const bindResearchFilters = () => {
+    // Wrapper for resource filters
+  };
+
+  const bindPrivacy = () => {
+    const exportBtn = $('#btn-export-data');
+    if (!exportBtn) return;
+    exportBtn.onclick = async () => {
+      try {
+        const r = await api('/privacy/export');
+        const blob = new Blob([JSON.stringify(r, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `synapse_export_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        showToast('Export started.');
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    };
+
+    const delBtn = $('#btn-delete-account');
+    if (!delBtn) return;
+    delBtn.onclick = async () => {
+      if (!confirm('Are you sure? This will anonymise your data permanently.')) return;
+      try {
+        await api('/privacy/account', { method: 'DELETE' });
+        localStorage.removeItem('synapse_user');
+        user = null;
+        App.navigateTo('home');
+        showToast('Account anonymised.');
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    };
+  };
+
+  /* ============================================================
+     OTHERS
+     ============================================================ */
+  const bindNotifications = () => {
+    // notification logic
+  };
+
+  const bindRoom = () => {
+    // room logic
+  };
+
+  const bindModals = () => {
+    $$('[data-modal-close]').forEach(btn => {
+      btn.onclick = () => {
+        $$('.modal').forEach(m => m.classList.add('hidden'));
+      };
+    });
+  };
+
+  const bindNav = () => {
+    // Nav logic (handled in initUserUI)
+  };
+
+  const bindQuickReset = () => {
+    $$('.qr-tile').forEach(btn => {
+      btn.onclick = () => {
+        const game = btn.dataset.game;
+        App.navigateTo('recovery');
+        // trigger the specific game in the recovery studio
+        window.dispatchEvent(new CustomEvent('synapse:open-game', { detail: { slug: game } }));
+      };
+    });
+  };
+
+  const refreshAll = async () => {
+    if (!user) return;
+    await refreshAIGlassStats();
+    await refreshForecast();
+    await refreshWellbeingReport();
+    await refreshMoodHistory();
+    await refreshWelfareDashboard();
+    await refreshCommanderDashboard();
+    await refreshMoodHistory();
+  };
+
+  /* ============================================================
+     SIH 26186 — AI Friend Glass Card stats (dashboard)
+     ============================================================ */
+  const refreshAIGlassStats = async () => {
+    if (!user) return;
+    try {
+      const r = await api('/insight');
+      const s = (r.insight && r.insight.snapshot) || {};
+      const set = (k, v) => { const el = document.querySelector(`[data-glass="${k}"]`); if (el) el.textContent = (typeof v === 'number') ? v : '—'; };
+      set('mood', s.mood); set('stress', s.stress); set('recovery', s.recovery);
+    } catch(_){}
+  };
+
+  /* ============================================================
+     SIH 26186 — 7-day Welfare Forecast (dashboard)
+     ============================================================ */
+  const refreshForecast = async () => {
+    if (!user) return;
+    try {
+      const me = await api('/personnel/me');
+      const pid = me.profile && me.profile.id;
+      if (!pid) return;
+      const r = await api('/personnel/' + pid + '/risk');
+      const risk = r.risk;
+      if (!risk) return;
+      const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+      set('fc-current', risk.current_score);
+      const lvl = risk.current_level;
+      const lvlEl = document.getElementById('fc-current-level');
+      if (lvlEl) { lvlEl.textContent = lvl.toUpperCase(); lvlEl.className = 'forecast-cell-level fc-' + lvl; }
+      set('fc-predicted', risk.predicted_7d_score);
+      const pEl = document.getElementById('fc-predicted-level');
+      if (pEl) { pEl.textContent = risk.predicted_7d_level.toUpperCase(); pEl.className = 'forecast-cell-level fc-' + risk.predicted_7d_level; }
+      set('fc-confidence', (risk.confidence || 0) + '%');
+      const ul = document.getElementById('fc-signals');
+      if (ul) {
+        ul.innerHTML = '';
+        const sigs = (risk.contributing_signals || []).slice(0, 5);
+        if (!sigs.length) {
+          ul.innerHTML = '<li class="muted small">No strong risk signals detected.</li>';
+        } else {
+          for (const s of sigs) {
+            const li = document.createElement('li');
+            li.className = s.direction === 'risk' ? 'risk' : 'protective';
+            li.textContent = (s.direction === 'risk' ? '↑ ' : '↓ ') + s.label + (s.delta ? ' (' + s.delta + ')' : '');
+            ul.appendChild(li);
+          }
+        }
+      }
+    } catch(_){}
+  };
+
+  /* ============================================================
+     SIH 26186 — Wellbeing Report
+     ============================================================ */
+  const refreshWellbeingReport = async () => {
+    if (!user) return;
+    try {
+      let r = await api('/ai-friend/report');
+      if (!r || !r.has_data) {
+        try {
+          const latest = await api('/ai-friend/report/latest');
+          if (latest && latest.has_data) r = latest;
+        } catch (_) {}
+      }
+      const o = r.overall || {};
+      const noData = !r.has_data;
+      const overallEls = document.querySelectorAll('#rep-overall');
+      if (overallEls.length) {
+        const fields = ['mood','stress','anxiety','loneliness','fatigue','emotional_exhaustion','recovery','confidence'];
+        const html = fields.map(f => {
+          const v = o[f];
+          const display = (v == null) ? '—' : v;
+          const cls = (v == null) ? ' report-overall-cell-val muted' : ' report-overall-cell-val';
+          return '<div class="report-overall-cell"><div class="report-overall-cell-label">' + f.replace('_',' ').toUpperCase() + '</div><div class="' + cls.trim() + '">' + display + '</div></div>';
+        }).join('');
+        overallEls.forEach(el => { el.innerHTML = html; });
+      }
+      const primaryFields = ['mood','stress','anxiety','recovery'];
+      const secondaryFields = ['loneliness','fatigue','emotional_exhaustion','confidence'];
+      const renderCell = (f) => {
+        const v = o[f];
+        const display = (v == null) ? '—' : v;
+        const cls = (v == null) ? ' report-overall-cell-val muted' : ' report-overall-cell-val';
+        return '<div class="report-overall-cell"><div class="report-overall-cell-label">' + f.replace('_',' ').toUpperCase() + '</div><div class="' + cls.trim() + '">' + display + '</div></div>';
+      };
+      const primaryEls = document.querySelectorAll('#rep-overall-primary');
+      if (primaryEls.length) {
+        primaryEls.forEach(el => { el.innerHTML = primaryFields.map(renderCell).join(''); });
+      }
+      const secondaryEls = document.querySelectorAll('#rep-overall-secondary');
+      if (secondaryEls.length) {
+        secondaryEls.forEach(el => {
+          el.innerHTML = '<div class="secondary-label">More signals</div>' + secondaryFields.map(renderCell).join('');
+        });
+      }
+      const fillAll = (selector, items, formatter) => {
+        const els = document.querySelectorAll(selector);
+        if (!els.length) return;
+        const empty = '<div class="item muted">' + (noData ? 'Not enough data yet' : 'No data yet.') + '</div>';
+        els.forEach(el => {
+          if (!items || !items.length) { el.innerHTML = empty; return; }
+          el.innerHTML = items.map(x => '<div class="item">' + escapeHtml(formatter ? formatter(x) : x) + '</div>').join('');
+        });
+      };
+      fillAll('#rep-emotions', r.dominant_emotions, x => x.replace(/_/g,' '));
+      fillAll('#rep-themes', (r.themes || []).map(t => t.replace('protective:','')));
+      fillAll('#rep-positive', (r.positive_changes || []).map(p => p.text));
+      fillAll('#rep-stressors', r.potential_stressors, x => x.replace(/_/g,' '));
+      fillAll('#rep-protective', r.protective_factors);
+
+      const emEls = document.querySelectorAll('#rep-emotions');
+      emEls.forEach(emEl => {
+        if (r.dominant_emotions && r.dominant_emotions.length) {
+          emEl.innerHTML = r.dominant_emotions.map(x => '<span class="chip">' + escapeHtml(x.replace(/_/g,' ')) + '</span>').join('');
+        } else {
+          emEl.innerHTML = '<div class="item muted">' + (noData ? 'Not enough data yet' : 'No dominant emotions detected.') + '</div>';
+        }
+      });
+      const thEls = document.querySelectorAll('#rep-themes');
+      thEls.forEach(thEl => {
+        const themes = (r.themes || []).map(t => t.replace('protective:',''));
+        if (themes.length) {
+          thEl.innerHTML = themes.map(x => '<span class="chip">' + escapeHtml(x) + '</span>').join('');
+        } else {
+          thEl.innerHTML = '<div class="item muted">' + (noData ? 'Not enough data yet' : 'No themes detected.') + '</div>';
+        }
+      });
+
+      const sigEl = document.getElementById('dash-meta-signals');
+      if (sigEl) sigEl.textContent = (r.signal_count != null ? r.signal_count : '0');
+      const snapEl = document.getElementById('dash-meta-snapshot');
+      if (snapEl) {
+        if ((r.trend_7d && r.trend_7d.checkins > 0) || (r.trend_30d && r.trend_30d.checkins > 0)) {
+          snapEl.textContent = 'Active · ' + (r.trend_7d.checkins || 0) + ' check-ins · 7d';
+        } else if ((r.signal_count || 0) > 0) {
+          snapEl.textContent = 'Active · ' + r.signal_count + ' signals';
+        } else {
+          snapEl.textContent = 'Awaiting first signal';
+        }
+      }
+
+      const tagEl = document.getElementById('overall-tag');
+      if (tagEl && r.trend_7d && typeof r.trend_7d.avg_stress === 'number') {
+        const s = r.trend_7d.avg_stress;
+        let tag = 'BALANCED';
+        if (s >= 70) tag = 'ELEVATED';
+        else if (s >= 50) tag = 'WATCH';
+        else if (s < 35) tag = 'STABLE';
+        tagEl.textContent = tag;
+      } else if (tagEl) {
+        tagEl.textContent = '—';
+      }
+    } catch(_){}
+  };
+
+  /* ============================================================
+     AI Friend float button — opens a glassmorphic chat panel
+     ============================================================ */
+  const _aiFriendConv = [];
+  const _renderPanelMsg = (role, text, isCrisis) => {
+    const conv = document.getElementById('ai-friend-panel-conv');
+    if (!conv) return;
+    const div = document.createElement('div');
+    div.className = 'ai-msg ' + role + (isCrisis ? ' crisis' : '');
+    div.textContent = text;
+    conv.appendChild(div);
+    conv.scrollTop = conv.scrollHeight;
+  };
+  const _setPanelTyping = (on) => {
+    const t = document.getElementById('ai-friend-panel-typing');
+    if (!t) return;
+    t.classList.toggle('hidden', !on);
+  };
+  const bindAIFriendPanel = () => {
+    const panel = document.getElementById('ai-friend-panel');
+    const form  = document.getElementById('ai-friend-panel-form');
+    if (!panel || !form || form.dataset.bound) return;
+    form.dataset.bound = '1';
+    form.__appBound = true;
+    form.setAttribute('novalidate', 'true');
+    form.addEventListener('submit', (e) => e.preventDefault(), true);
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const inp = document.getElementById('ai-friend-panel-input');
+      const text = inp.value.trim();
+      if (!text) return;
+      if (!user) {
+        $('#auth-modal').classList.remove('hidden');
+        return;
+      }
+      _aiFriendConv.push({ role: 'user', content: text });
+      _renderPanelMsg('user', text);
+      inp.value = '';
+      _setPanelTyping(true);
+      try {
+        const r = await api('/chat', { method: 'POST', body: JSON.stringify({ content: text }) });
+        _aiFriendConv.push({ role: 'assistant', content: r.reply });
+        _renderPanelMsg('assistant', r.reply, r.crisis);
+      } catch (_) {
+        _renderPanelMsg('assistant', 'Sorry, I had trouble responding. Please try again.');
+      } finally {
+        _setPanelTyping(false);
+      }
+    };
+    const inp = document.getElementById('ai-friend-panel-input');
+    if (inp) {
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.stopPropagation();
+          e.preventDefault();
+          form.dispatchEvent(new Event('submit', { cancelable: true }));
+        }
+      });
+    }
+    const closeBtn = document.getElementById('ai-friend-panel-close');
+    if (closeBtn && !closeBtn.dataset.bound) {
+      closeBtn.dataset.bound = '1';
+      closeBtn.addEventListener('click', () => toggleAIFriendPanel(false));
+    }
+  };
+  const toggleAIFriendPanel = (force) => {
+    const btn = document.getElementById('ai-friend-float');
+    const panel = document.getElementById('ai-friend-panel');
+    if (!btn || !panel) return;
+    const willOpen = typeof force === 'boolean' ? force : !panel.classList.contains('open');
+    panel.classList.toggle('open', willOpen);
+    panel.classList.toggle('hidden', !willOpen);
+    btn.classList.toggle('is-open', willOpen);
+    btn.setAttribute('aria-expanded', String(willOpen));
+    if (willOpen) {
+      const inp = document.getElementById('ai-friend-panel-input');
+      if (inp) setTimeout(() => inp.focus({ preventScroll: true }), 200);
+      const conv = document.getElementById('ai-friend-panel-conv');
+      if (conv && conv.children.length === 0) {
+        _renderPanelMsg('assistant', "Hi — I'm SYNAPSE AI Friend. What's on your mind today?");
+      }
+    }
+  };
+  const bindAIFriendFloat = () => {
+    const btn = document.getElementById('ai-friend-float');
+    if (!btn || btn.dataset.bound) return;
+    btn.dataset.bound = '1';
+    bindAIFriendPanel();
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleAIFriendPanel();
+    });
+  };
+
+  /* ============================================================
+     SIH 26186 — Mood History
+     ============================================================ */
+  const refreshMoodHistory = async (range) => {
+    if (!user) return;
+    range = range || '7d';
+    try {
+      const r = await api('/mood/history?range=' + range);
+      $$('.mood-tab').forEach(t => t.classList.toggle('active', t.dataset.range === range));
+      const grid = document.getElementById('mood-grid');
+      if (!grid) return;
+      const checks = r.checkins || [];
+      if (!checks.length) { grid.innerHTML = '<div class="mood-cell"><div class="mood-cell-title">NO DATA</div><div class="muted small">Log a check-in to start your trend.</div></div>'; return; }
+      const dims = [
+        { key:'mood', label:'MOOD', color:'#62D8E8' },
+        { key:'stress', label:'STRESS', color:'#E07A5F' },
+        { key:'anxiety', label:'ANXIETY', color:'#D9A441' },
+        { key:'fatigue', label:'FATIGUE', color:'#7B5FFF' },
+        { key:'loneliness', label:'LONELINESS', color:'#5CA9FF' },
+        { key:'recovery', label:'RECOVERY', color:'#62D88A' }
+      ];
+      grid.innerHTML = dims.map(d => {
+        const vals = checks.map(c => c[d.key] || 0);
+        const path = sparkline(vals, d.color);
+        return '<div class="mood-cell"><div class="mood-cell-title">' + d.label + '</div>' + path + '</div>';
+      }).join('');
+    } catch(_){}
+  };
+  const sparkline = (vals, color) => {
+    if (!vals.length) return '<div class="muted small">No data.</div>';
+    const w = 280, h = 80, n = vals.length;
+    const step = w / Math.max(1, n - 1);
+    let pts = vals.map((v, i) => `${(i*step).toFixed(1)},${(h - (v/100)*h).toFixed(1)}`);
+    const path = 'M' + pts.join(' L');
+    const fill = path + ` L${w},${h} L0,${h} Z`;
+    return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><defs><linearGradient id="g-${color.slice(1)}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${color}" stop-opacity=".4"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs><path d="${fill}" fill="url(#g-${color.slice(1)})"/><path d="${path}" fill="none" stroke="${color}" stroke-width="1.5"/></svg>`;
+  };
+
+  /* ============================================================
+     SIH 26186 — Welfare Command Center
+     ============================================================ */
+  const refreshWelfareDashboard = async () => {
+    if (!user || (user.role !== 'welfare_officer' && user.role !== 'admin')) return;
+    try {
+      const r = await api('/welfare/dashboard');
+      const stats = document.getElementById('welfare-stats');
+      if (stats) {
+        const t = r.totals || {};
+        stats.innerHTML = `
+          <div class="welfare-stat"><div class="welfare-stat-num">${t.personnel||0}</div><div class="welfare-stat-lbl">PERSONNEL</div></div>
+          <div class="welfare-stat low"><div class="welfare-stat-num">${t.low||0}</div><div class="welfare-stat-lbl">LOW RISK</div></div>
+          <div class="welfare-stat moderate"><div class="welfare-stat-num">${t.moderate||0}</div><div class="welfare-stat-lbl">MODERATE</div></div>
+          <div class="welfare-stat high"><div class="welfare-stat-num">${t.high||0}</div><div class="welfare-stat-lbl">HIGH</div></div>
+          <div class="welfare-stat urgent"><div class="welfare-stat-num">${t.urgent||0}</div><div class="welfare-stat-lbl">URGENT</div></div>`;
+      }
+      const tr = (r.trends && r.trends.stress) || [];
+      const drawTrend = (id, data, color) => {
+        const el = document.getElementById(id); if (!el) return;
+        if (!data.length) { el.textContent = '—'; return; }
+        const w = 280, h = 60, n = data.length;
+        const step = w / Math.max(1, n - 1);
+        const pts = data.map((d, i) => `${(i*step).toFixed(1)},${(h - ((d.v||0)/100)*h).toFixed(1)}`);
+        const path = 'M' + pts.join(' L');
+        el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><path d="${path}" fill="none" stroke="${color}" stroke-width="1.5"/></svg>`;
+      };
+      drawTrend('wf-trend-stress', tr, '#E07A5F');
+      drawTrend('wf-trend-fatigue', (r.trends && r.trends.mood) || [], '#7B5FFF');
+      drawTrend('wf-trend-recovery', (r.trends && r.trends.recovery) || [], '#62D88A');
+      const dd = document.getElementById('wf-deploy-dist');
+      if (dd) dd.innerHTML = '<div class="muted small">DEMO DATA · See <code>/api/personnel</code> for full distribution</div>';
+
+      const q = document.getElementById('wf-queue');
+      if (q) {
+        if (!r.queue || !r.queue.length) q.innerHTML = '<div class="muted small">No high-priority personnel right now.</div>';
+        else q.innerHTML = r.queue.map(p => `<div class="wf-row">
+          <div class="wf-pid">${escapeHtml(p.pseudo_id)}</div>
+          <div>${escapeHtml(p.unit||'')}</div>
+          <div>${escapeHtml(p.last_checkin ? 'Last check-in: ' + new Date(p.last_checkin).toLocaleDateString() : 'No check-in')}</div>
+          <div class="wf-risk ${p.risk_level}">${p.risk_score} · ${p.risk_level.toUpperCase()}</div>
+          <div class="wf-actions"><button data-pid="${p.id}">Open</button></div>
+        </div>`).join('');
+        q.querySelectorAll('button[data-pid]').forEach(b => b.onclick = () => openPersonnelModal(+b.dataset.pid));
+      }
+      const a = document.getElementById('wf-alerts');
+      if (a) {
+        if (!r.alerts || !r.alerts.length) a.innerHTML = '<div class="muted small">No active alerts.</div>';
+        else a.innerHTML = r.alerts.map(al => `<div class="wf-row" style="grid-template-columns: 100px 1fr 100px;">
+          <div class="wf-risk ${al.severity}">${al.severity.toUpperCase()}</div>
+          <div><strong>${escapeHtml(al.pseudo_id)}</strong> · ${escapeHtml(al.message)}<div class="muted small">${escapeHtml(al.reason||'')}</div></div>
+          <div class="wf-actions"><button data-ack="${al.id}">Acknowledge</button></div>
+        </div>`).join('');
+        a.querySelectorAll('button[data-ack]').forEach(b => b.onclick = async () => {
+          try { await api('/welfare/alerts/' + b.dataset.ack + '/ack', { method:'POST' }); refreshWelfareDashboard(); showToast('Alert acknowledged.'); } catch(_){}
+        });
+      }
+    } catch(_){}
+  };
+  const openPersonnelModal = async (id) => {
+    try {
+      const r1 = await api('/personnel/' + id);
+      const r2 = await api('/personnel/' + id + '/risk');
+      const r3 = await api('/welfare/recommendations/' + id);
+      const p = r1.profile, risk = r2.risk, recs = r3.recommendations || [];
+      const html = `<div class="modal-card">
+        <button class="modal-close" data-modal-close>×</button>
+        <h3>${escapeHtml(p.pseudo_id)} · ${escapeHtml(p.rank||'')} · ${escapeHtml(p.unit||'')}</h3>
+        <div class="muted small">${escapeHtml(p.role||'')} · ${p.service_years} years · ${p.duty_pattern||''}</div>
+        <div style="margin-top:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+          <div class="welfare-stat"><div class="welfare-stat-num">${risk.current_score}</div><div class="welfare-stat-lbl">CURRENT</div></div>
+          <div class="welfare-stat"><div class="welfare-stat-num">${risk.predicted_7d_score}</div><div class="welfare-stat-lbl">PREDICTED 7D</div></div>
+          <div class="welfare-stat"><div class="welfare-stat-num">${risk.confidence}%</div><div class="welfare-stat-lbl">CONFIDENCE</div></div>
+        </div>
+        <div style="margin-top:14px;"><strong>Contributing signals</strong>
+          <ul class="forecast-signals-list" style="margin-top:6px;">${(risk.contributing_signals||[]).map(s=>`<li class="${s.direction==='risk'?'risk':'protective'}">${s.direction==='risk'?'↑ ':'↓ '}${escapeHtml(s.label)} (${s.delta})</li>`).join('') || '<li class="muted small">None</li>'}</ul>
+        </div>
+        <div style="margin-top:14px;"><strong>Recommended welfare actions</strong>
+          <ul style="margin-top:6px;padding-left:20px;">${recs.map(rc=>`<li><strong>${rc.priority.toUpperCase()}:</strong> ${escapeHtml(rc.action)} — <span class="muted small">${escapeHtml(rc.detail)}</span></li>`).join('') || '<li class="muted small">No recommendations.</li>'}</ul>
+        </div>
+      </div>`;
+      openModal(html);
+    } catch(_){}
+  };
+
+  /* ============================================================
+     SIH 26186 — Commander Dashboard
+     ============================================================ */
+  const refreshCommanderDashboard = async () => {
+    if (!user || !['commander','admin','welfare_officer'].includes(user.role)) return;
+    try {
+      const r = await api('/commander/dashboard');
+      const stats = document.getElementById('cmd-stats');
+      if (stats) {
+        const t = r.totals || {};
+        stats.innerHTML = `
+          <div class="welfare-stat"><div class="welfare-stat-num">${t.personnel||0}</div><div class="welfare-stat-lbl">PERSONNEL</div></div>
+          <div class="welfare-stat low"><div class="welfare-stat-num">${t.low||0}</div><div class="welfare-stat-lbl">LOW</div></div>
+          <div class="welfare-stat moderate"><div class="welfare-stat-num">${t.moderate||0}</div><div class="welfare-stat-lbl">MODERATE</div></div>
+          <div class="welfare-stat high"><div class="welfare-stat-num">${t.high||0}</div><div class="welfare-stat-lbl">HIGH</div></div>
+          <div class="welfare-stat urgent"><div class="welfare-stat-num">${t.urgent||0}</div><div class="welfare-stat-lbl">URGENT</div></div>`;
+      }
+      const units = document.getElementById('cmd-units');
+      if (units) {
+        const list = r.units || [];
+        units.innerHTML = list.map(u => `<div class="welfare-unit-row">
+          <span>${escapeHtml(u.unit)}</span>
+          <span>WL ${u.avg_workload} · REC ${u.avg_recovery}</span>
+          <span>L${u.low||0} M${u.moderate||0} H${u.high||0} U${u.urgent||0}</span>
+        </div>`).join('') || '<div class="muted small">No units</div>';
+      }
+      const drawTrend = (id, data, color) => {
+        const el = document.getElementById(id); if (!el) return;
+        if (!data || !data.length) { el.textContent = '—'; return; }
+        const w = 280, h = 60, n = data.length;
+        const step = w / Math.max(1, n - 1);
+        const pts = data.map((d, i) => `${(i*step).toFixed(1)},${(h - ((d.v||0)/100)*h).toFixed(1)}`);
+        const path = 'M' + pts.join(' L');
+        el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><path d="${path}" fill="none" stroke="${color}" stroke-width="1.5"/></svg>`;
+      };
+      drawTrend('cmd-trend-mood', (r.trends && r.trends.mood) || [], '#62D8E8');
+      drawTrend('cmd-trend-sleep', (r.trends && r.trends.sleep) || [], '#7B5FFF');
+    } catch(_){}
+  };
+
+  /* ============================================================
+     SIH 26186 — Mood tabs + chat wiring
+     ============================================================ */
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest && e.target.closest('.mood-tab');
+    if (t) refreshMoodHistory(t.dataset.range);
+  });
+
+  const init = () => {
+    bindAuthOpen();
+    bindAuthModal();
+    renderAuth();
+    bindCheckin();
+    bindChat();
+    renderScreening();
+    bindScreening();
+    bindVoice();
+    bindRecovery();
+    bindCounsellorFilters();
+    bindResourceFilters();
+    bindResearchFilters();
+    bindPrivacy();
+    bindNotifications();
+    bindRoom();
+    bindModals();
+    bindNav();
+    bindQuickReset();
+    window.addEventListener('synapse:open-game', (e) => {
+      const slug = e.detail && e.detail.slug;
+      if (!slug) return;
+      try {
+        const grid = document.getElementById('game-grid');
+        if (!grid) return;
+        const titles = {
+          'breathing-bubble': 'Breathing Bubble',
+          'zen-tap': 'Zen Tap',
+          'color-match': 'Color Match',
+          'memory-garden': 'Memory Garden',
+          'grounding-54321': 'Grounding 5-4-3-2-1',
+          'calm-flow': 'Calm Flow',
+          'target-blast': 'Target Blast',
+          'stress-pop': 'Stress Pop',
+          'focus-dot': 'Focus Dot'
+        };
+        const wanted = titles[slug];
+        if (!wanted) return;
+        const cards = grid.querySelectorAll('.game-card');
+        for (const c of cards) {
+          if ((c.querySelector('h4') || {}).textContent === wanted) {
+            c.click();
+            return;
+          }
+        }
+      } catch (_) {}
+    });
+    loadCounsellors();
+    loadResources();
+    loadExercises();
+    loadResearch();
+    refreshAll();
+    setInterval(() => { if (user) loadNotifications(); }, 30000);
+  };
+
+  return { init };
+})();
+
+document.addEventListener('DOMContentLoaded', App.init);

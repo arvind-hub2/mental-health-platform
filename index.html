@@ -1,0 +1,1629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SYNAPSE — Personnel Stress &amp; Welfare Intelligence</title>
+<meta name="description" content="SYNAPSE — AI-Based Predictive Personnel Stress and Welfare Monitoring System for uniformed forces." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+<a class="skip-link" href="#home">Skip to main content</a>
+<div class="grain"></div>
+<div class="vignette"></div>
+<div id="loader" role="status" aria-live="polite"><div class="loader-ring" aria-hidden="true"></div><div class="loader-text">SYNAPSE · NEURAL INTERFACE ONLINE</div></div>
+
+<canvas id="bg" aria-hidden="true"></canvas>
+
+<!-- TOP NAV -->
+<nav id="nav" aria-label="Primary">
+  <div class="nav-inner">
+    <a href="#home" class="logo" aria-label="Synapse Home">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+        <circle cx="14" cy="14" r="2" fill="#D9A441"/>
+        <circle cx="6" cy="8" r="1.4" fill="#62D8E8"/>
+        <circle cx="22" cy="8" r="1.4" fill="#5CA9FF"/>
+        <circle cx="6" cy="20" r="1.4" fill="#5CA9FF"/>
+        <circle cx="22" cy="20" r="1.4" fill="#62D8E8"/>
+        <path d="M6 8 L14 14 L22 8 M6 20 L14 14 L22 20" stroke="#5CA9FF" stroke-width="0.6" opacity="0.7"/>
+      </svg>
+      <span>SYNAPSE</span>
+    </a>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="#dashboard" data-route="dashboard">Dashboard</a></li>
+      <li><a href="#voice" data-route="voice">Voice</a></li>
+      <li><a href="#screening" data-route="screening">Screening</a></li>
+      <li><a href="#recovery" data-route="recovery">Recovery</a></li>
+      <li><a href="#games" data-route="games">Mindful</a></li>
+      <li><a href="#counsellors" data-route="counsellors">Counsellors</a></li>
+      <li><a href="#report" data-route="report">Report</a></li>
+      <li><a href="#mood-history" data-route="mood-history">Mood</a></li>
+      <li><a href="#library" data-route="library">Resources</a></li>
+      <li><a href="#research" data-route="research">Research</a></li>
+      <li class="hidden" data-role-link="welfare_officer,admin"><a href="#welfare" data-route="welfare">Welfare</a></li>
+      <li class="hidden" data-role-link="commander,admin,welfare_officer"><a href="#commander" data-route="commander">Unit</a></li>
+    </ul>
+    <div class="nav-right">
+      <button class="theme-trigger" id="theme-trigger" type="button" aria-label="Customize theme" aria-controls="theme-panel" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2 2M16.4 16.4l2 2M5.6 18.4l2-2M16.4 7.6l2-2"/></svg>
+        <span>Theme</span>
+      </button>
+      <button class="btn ghost small soldier-only hidden" id="soldier-inst-btn" type="button" title="Instructor Guide">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <span>Instructor</span>
+      </button>
+      <button class="bell" id="notif-btn" type="button" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>
+        <span class="bell-dot hidden" id="notif-dot"></span>
+      </button>
+      <a href="#cta" class="nav-cta">Launch Platform <span aria-hidden="true">→</span></a>
+      <div id="auth-bar" class="auth-bar auth-bar-right">
+        <button class="auth-btn nav-login" id="auth-open" type="button">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
+          <span>Login</span>
+        </button>
+      </div>
+      <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+  <div class="mobile-menu hidden" id="mobile-menu">
+    <a href="#dashboard">Dashboard</a>
+    <a href="#voice">Voice Companion</a>
+    <a href="#screening">Screening</a>
+    <a href="#recovery">Recovery Studio</a>
+    <a href="#games">Mindful Games</a>
+    <a href="#counsellors">Counsellors</a>
+    <a href="#report">Wellbeing Report</a>
+    <a href="#mood-history">Mood History</a>
+    <a href="#library">Resources</a>
+    <a href="#research">Research</a>
+    <a href="#privacy">Privacy</a>
+    <a href="#admin" id="admin-link-mobile" class="hidden">Command Center</a>
+    <a href="#welfare" id="welfare-link-mobile" class="hidden">Welfare Center</a>
+    <a href="#commander" id="commander-link-mobile" class="hidden">Unit Overview</a>
+  </div>
+</nav>
+
+<!-- AUTH MODAL -->
+<div id="auth-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+  <div class="modal-card">
+    <button class="modal-close" id="auth-close" aria-label="Close">×</button>
+    <div class="tabs">
+      <button class="tab active" data-tab="login" type="button">Sign in</button>
+      <button class="tab" data-tab="register" type="button">Create account</button>
+    </div>
+    <form id="login-form" class="form active">
+      <h3 id="auth-title">Welcome back</h3>
+      <label>Email <input type="email" name="email" required></label>
+      <label>Password <input type="password" name="password" required minlength="4"></label>
+      <button class="btn primary" type="submit">Sign in</button>
+      <div class="form-msg"></div>
+      <div class="muted small">Demo accounts: <code>admin@synapse.io</code> / <code>password</code> · <code>demo@synapse.io</code> / <code>password</code></div>
+    </form>
+    <form id="register-form" class="form">
+      <h3>Create your account</h3>
+      <label>Name <input type="text" name="name" required></label>
+      <label>Email <input type="email" name="email" required></label>
+      <label>Password <input type="password" name="password" required minlength="4"></label>
+      <label>Role
+        <select name="role">
+          <option value="personnel">Personnel</option>
+          <option value="counsellor">Counsellor</option>
+          <option value="admin">Administrator</option>
+        </select>
+      </label>
+      <button class="btn primary" type="submit">Create account</button>
+      <div class="form-msg"></div>
+    </form>
+  </div>
+</div>
+
+<!-- SOLDIER MODE MODAL -->
+<div id="soldier-mode-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="sm-title">
+  <div class="modal-card">
+    <h3 id="sm-title">Switch to Soldier Mode?</h3>
+    <p class="muted" style="margin-bottom:24px; text-align:center;">This will enable specialized features for uniformed personnel including Duty Pressure checks, Longitudinal Trends, and Command Overviews.</p>
+    <div class="modal-btns" style="display:flex; gap:12px; justify-content:center;">
+      <button class="btn ghost" id="sm-cancel">Cancel</button>
+      <button class="btn primary" id="sm-switch">Switch</button>
+    </div>
+  </div>
+</div>
+
+<!-- SOLDIER INSTRUCTOR POPUP -->
+<div id="soldier-instructor" class="instructor-popup hidden">
+  <div class="inst-card">
+    <div class="inst-avatar">🎖️</div>
+    <div class="inst-content">
+        <div id="inst-slides" class="inst-slides">
+          <div class="inst-slide active">
+            <div class="inst-msg">
+              <strong>Hi Soldier 👋</strong><br><br>
+              Welcome to your specialized command interface. Soldier Mode provides dedicated tools for wellbeing, duty pressure, and high-intensity recovery tailored for uniformed personnel.
+            </div>
+          </div>
+          <div class="inst-slide hidden">
+            <div class="inst-msg">
+              <strong>Personnel Profile</strong><br><br>
+              <span class="inst-what">What:</span> Your identity, rank, and current duty status.<br>
+              <span class="inst-how">How:</span> View the top-left card in your dashboard.<br>
+              <span class="inst-when">When:</span> Verify your active status or update your duty location.
+            </div>
+            <button class="btn ghost small inst-go" data-target="#sol-profile">Go to Profile</button>
+          </div>
+          <div class="inst-slide hidden">
+            <div class="inst-msg">
+              <strong>Duty Readiness</strong><br><br>
+              <span class="inst-what">What:</span> A high-level signal of your operational readiness.<br>
+              <span class="inst-how">How:</span> Check the "Duty Readiness" pill in your profile.<br>
+              <span class="inst-when">When:</span> Before starting a shift to ensure you are fit for duty.
+            </div>
+            <button class="btn ghost small inst-go" data-target="#sol-readiness">Go to Readiness</button>
+          </div>
+          <div class="inst-slide hidden">
+            <div class="inst-msg">
+              <strong>Biometric Indicators</strong><br><br>
+              <span class="inst-what">What:</span> Estimates of Stress, Fatigue, Sleep, and Resilience.<br>
+              <span class="inst-how">How:</span> View the Bio-Grid on your dashboard.<br>
+              <span class="inst-when">When:</span> Monitor trends to avoid burnout during high-tempo operations.
+            </div>
+            <button class="btn ghost small inst-go" data-target="#sol-bio">Go to Biometrics</button>
+          </div>
+          <div class="inst-slide hidden">
+            <div class="inst-msg">
+              <strong>Duty Wellbeing Check-in</strong><br><br>
+              <span class="inst-what">What:</span> A specialized form for operational and workload pressure.<br>
+              <span class="inst-how">How:</span> Fill out the "Duty Pressure Check" at the bottom of the dashboard.<br>
+              <span class="inst-when">When:</span> After a critical incident or long-duration shift.
+            </div>
+            <button class="btn ghost small inst-go" data-target="#pressure-form">Go to Check-in</button>
+          </div>
+          <div class="inst-slide hidden">
+            <div class="inst-msg">
+              <strong>Longitudinal Trends</strong><br><br>
+              <span class="inst-what">What:</span> A 14-day view of your stress and recovery patterns.<br>
+              <span class="inst-how">How:</span> Scroll down to the "Longitudinal Wellbeing Trends" chart.<br>
+              <span class="inst-when">When:</span> To identify cyclical stress peaks over a two-week window.
+            </div>
+            <button class="btn ghost small inst-go" data-target="#wellbeing-timeline">Go to Trends</button>
+          </div>
+          <div class="inst-slide hidden">
+            <div class="inst-msg">
+              <strong>Unit Risk Level</strong><br><br>
+              <span class="inst-what">What:</span> Anonymized aggregated risk state for your entire unit.<br>
+              <span class="inst-how">How:</span> Found in the "Command Overview" section.<br>
+              <span class="inst-when">When:</span> To understand if current stress is systemic or individual.
+            </div>
+            <button class="btn ghost small inst-go" data-target="#unit-risk-val">Go to Unit Risk</button>
+          </div>
+          <div class="inst-slide hidden">
+            <div class="inst-msg">
+              <strong>Secure Banner</strong><br><br>
+              <span class="inst-what">What:</span> Status indicator for record confidentiality and channel security.<br>
+              <span class="inst-how">How:</span> Visible at the top of the hero section in Soldier Mode.<br>
+              <span class="inst-when">When:</span> To ensure you are operating in a secure, authenticated environment.
+            </div>
+            <button class="btn ghost small inst-go" data-target="#soldier-secure-banner">Go to Banner</button>
+          </div>
+          <div class="inst-slide hidden">
+            <div class="inst-msg">
+              <strong>Welfare Schemes</strong><br><br>
+              <span class="inst-what">What:</span> Direct access to personnel benefits and housing support.<br>
+              <span class="inst-how">How:</span> Use the "Welfare Schemes" card in the welfare grid.<br>
+              <span class="inst-when">When:</span> To apply for allowances or check support packages.
+            </div>
+            <button class="btn ghost small inst-go" data-target="#welfare-schemes">Go to Schemes</button>
+          </div>
+          <div class="inst-slide hidden">
+            <div class="inst-msg">
+              <strong>Confidential Counselling</strong><br><br>
+              <span class="inst-what">What:</strong> Secure booking for military-specialist psychologists.<br>
+              <span class="inst-how">How:</strong> Click "Book Session" in the Welfare grid or visit the Counsellors page.<br>
+              <span class="inst-when">When:</strong> For trauma support or long-term mental health management.
+            </div>
+            <button class="btn ghost small inst-go" data-target="#welfare-counselling">Go to Counselling</button>
+          </div>
+          <div class="inst-slide hidden">
+            <div class="inst-msg">
+              <strong>Emergency Support</strong><br><br>
+              <span class="inst-what">What:</strong> High-priority escalation for acute stress or crisis.<br>
+              <span class="inst-how">How:</span> Use the "Emergency Support" card in the welfare grid.<br>
+              <span class="inst-when">When:</strong> Immediate need for urgent human intervention.
+            </div>
+            <button class="btn ghost small inst-go" data-target="#welfare-emergency">Go to Emergency</button>
+          </div>
+          <div class="inst-slide hidden">
+            <div class="inst-msg">
+              <strong>Important Information</strong><br><br>
+              <span class="inst-what">What:</strong> Official directives on wellness protocols and health leave.<br>
+              <span class="inst-how">How:</strong> View the "Important Information" card in the welfare grid.<br>
+              <span class="inst-when">When:</strong> To understand official rights and medical procedures.
+            </div>
+            <button class="btn ghost small inst-go" data-target="#welfare-info">Go to Info</button>
+          </div>
+          <div class="inst-slide hidden">
+            <div class="inst-msg">
+              <strong>Recovery Studio</strong><br><br>
+              <span class="inst-what">What:</strong> Decompression exercises like Box Breathing and Grounding.<br>
+              <span class="inst-how">How:</strong> Navigate to the "Recovery" section from the navbar.<br>
+              <span class="inst-when">When:</strong> To rapidly downregulate after a high-intensity event.
+            </div>
+            <button class="btn ghost small inst-go" data-target="#recovery">Go to Recovery</button>
+          </div>
+          <div class="inst-slide hidden">
+            <div class="inst-msg">
+              <strong>Human Escalation</strong><br><br>
+              <span class="inst-what">What:</strong> A direct bridge from AI chat to human support professionals.<br>
+              <span class="inst-how">How:</strong> Click the "Talk to Human" button in the AI chat interface.<br>
+              <span class="inst-when">When:</strong> When AI support is insufficient for the severity of the situation.
+            </div>
+            <button class="btn ghost small inst-go" data-target="#escalate-btn">Go to Escalation</button>
+          </div>
+        </div>
+        <div class="inst-nav">
+          <button id="inst-prev" class="btn ghost small hidden">Back</button>
+          <button id="inst-next" class="btn primary small">Next</button>
+          <button id="inst-skip" class="btn ghost small">Skip</button>
+        </div>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATIONS PANEL -->
+<div id="notif-panel" class="notif-panel hidden" aria-label="Notification center">
+  <div class="notif-head">
+    <div>
+      <div class="notif-title">Notification Center</div>
+      <div class="notif-sub muted small">Daily check-ins, sessions, streaks</div>
+    </div>
+    <button class="link-btn" id="notif-clear">Mark all read</button>
+  </div>
+  <div class="notif-list" id="notif-list"></div>
+  <div class="notif-foot">
+    <a href="#privacy" class="link-btn" data-close-notif>Notification preferences</a>
+  </div>
+</div>
+
+<main>
+  <!-- HERO -->
+  <section id="home" class="hero hero-cinema">
+    <div class="hero-soldier-bg soldier-only hidden"></div>
+    <div class="hero-content hero-premium">
+      <div class="soldier-secure-banner soldier-only hidden">
+        <span>CONFIDENTIAL PERSONNEL RECORD · AUTHENTICATED ACCESS ONLY</span>
+        <span class="status-pill">SECURE CHANNEL</span>
+      </div>
+      <div class="hero-split">
+        <div class="hero-copy">
+          <div class="eyebrow reveal">
+            <span class="dot"></span>
+            SYNAPSE · WELLBEING INTELLIGENCE
+          </div>
+          <h1 class="hero-title hero-title-premium">
+            <span class="line"><span class="reveal-text">AI-Based Predictive</span></span>
+            <span class="line"><span class="reveal-text hero-em">Personnel Stress & Welfare Monitoring.</span></span>
+          </h1>
+          <p class="hero-sub hero-sub-premium reveal">
+            A specialized system for soldiers, police, paramilitary, and defence personnel facing high-stress operational environments and irregular schedules. Identify early signals, provide timely support, and build a resilient force.
+          </p>
+
+          <div class="hero-cta hero-cta-premium reveal">
+            <a class="btn primary magnetic" href="#dashboard" id="hero-launch"><span>Start Wellness Check</span><span class="arrow">→</span></a>
+            <a class="btn ghost magnetic" href="#ai-friend" id="hero-ai">Talk to AI Friend</a>
+          </div>
+        </div>
+
+        <div class="hero-orb-wrap soldier-only hidden" aria-hidden="true">
+          <img src="https://purl.ink/6kfjsebk"
+               class="hero-soldier-image"
+               alt="Soldiers Group"
+               onerror="this.src='https://via.placeholder.com/800x600?text=Soldiers+Group'">
+        </div>
+        <div class="hero-orb-wrap" id="standard-hero-orb" aria-hidden="true">
+          <div class="hero-orb">
+            <div class="hero-orb-core"></div>
+            <div class="hero-orb-ring r1"></div>
+            <div class="hero-orb-ring r2"></div>
+            <div class="hero-orb-ring r3"></div>
+            <div class="hero-orb-halo"></div>
+            <div class="hero-orb-dot a"></div>
+            <div class="hero-orb-dot b"></div>
+            <div class="hero-orb-dot c"></div>
+            <div class="hero-orb-dot d"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Intelligence flow (subtle, inline) -->
+      <div class="flow flow-cinema reveal" aria-label="Intelligence flow">
+        <div class="flow-step"><span class="flow-num">01</span><span class="flow-lbl">MONITOR</span></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><span class="flow-num">02</span><span class="flow-lbl">UNDERSTAND</span></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><span class="flow-num">03</span><span class="flow-lbl">SUPPORT</span></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><span class="flow-num">04</span><span class="flow-lbl">RECOVER</span></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><span class="flow-num">05</span><span class="flow-lbl">CONNECT</span></div>
+      </div>
+
+      <div class="hero-meta reveal">
+        <div><span class="k">01</span><span class="v">Predictive Wellbeing</span></div>
+        <div><span class="k">02</span><span class="v">Voice Companion</span></div>
+        <div><span class="k">03</span><span class="v">Human Care</span></div>
+        <div><span class="k">04</span><span class="v">Private by Design</span></div>
+      </div>
+    </div>
+    <div class="scroll-hint" id="scroll-hint" aria-hidden="true">
+      <svg class="hand-cue" viewBox="0 0 32 48" width="22" height="34" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 6c0-2 3-2 3 0v18"/>
+        <path d="M11 12c0-2 3-2 3 0v14"/>
+        <path d="M21 10c0-2 3-2 3 0v18"/>
+        <path d="M6 18c0-2 3-2 3 0v10"/>
+        <path d="M11 30c0 8 5 14 11 14s8-6 8-12V18"/>
+        <path d="M11 30c-2 0-4-2-4-4"/>
+        <path class="hand-arrow" d="M19 2v4M17 3h4"/>
+      </svg>
+      <span>SCROLL</span>
+    </div>
+  </section>
+
+  <!-- INTELLIGENCE FLOW -->
+  <section id="how" class="how">
+    <div class="section-head">
+      <div class="eyebrow reveal"><span class="dot"></span>01 · THE INTELLIGENCE LOOP</div>
+      <h2 class="reveal-text">Five quiet steps,<br/>from signal to support.</h2>
+      <p class="reveal">Every signal is processed with care — from self-reported indicators to a quiet conversation with a trained professional.</p>
+    </div>
+    <div class="steps">
+      <div class="step reveal"><div class="step-num">01</div><div class="step-line"></div><h3>MONITOR</h3><p>Daily check-ins, voice signals, and self-reported indicators captured within operational contexts.</p></div>
+      <div class="step reveal"><div class="step-num">02</div><div class="step-line"></div><h3>UNDERSTAND</h3><p>Trend analysis surfaces patterns of operational stress before they become a problem — never a diagnosis.</p></div>
+      <div class="step reveal"><div class="step-num">03</div><div class="step-line"></div><h3>SUPPORT</h3><p>AI wellbeing companion, recovery studio, and personalised recommendations for high-readiness roles.</p></div>
+      <div class="step reveal"><div class="step-num">04</div><div class="step-line"></div><h3>RECOVER</h3><p>Box breathing, grounding, sleep preparation, and other clinically reviewed exercises for rapid regulation.</p></div>
+      <div class="step reveal"><div class="step-num">05</div><div class="step-line"></div><h3>CONNECT</h3><p>Escalate to qualified counsellors — text, voice, or video — with consent and operational continuity.</p></div>
+    </div>
+  </section>
+
+  <!-- COMMAND DASHBOARD (Redesigned 2026-08-24) -->
+  <section id="dashboard" class="dashboard-sec dashboard-redesign">
+    <!-- HERO: Your reflection, in your own words. -->
+    <div class="dash-hero reveal-fade">
+      <div class="dash-hero-copy">
+        <div class="eyebrow"><span class="dot"></span>02 · PERSONNEL DASHBOARD</div>
+        <h1 class="dash-hero-title">
+          Personnel Readiness,<br/>
+          <span class="dash-hero-cyan"><em>and Wellbeing Reflection.</em></span>
+        </h1>
+        <p class="dash-hero-sub">Self-reported wellbeing indicators — a transparent, AI-supported view of your own signals tailored for high-stress duty personnel. Not a medical diagnosis.</p>
+        <div class="dash-hero-cta">
+          <a class="btn primary magnetic" href="#checkin-anchor" id="dash-start-checkin"><span>Start Wellness Check</span><span class="arrow">→</span></a>
+          <a class="btn ghost magnetic" href="#report" id="dash-view-report">View My Report</a>
+        </div>
+        <div class="dash-hero-meta" id="dash-hero-meta">
+          <div><span class="k">Snapshot</span><span class="v" id="dash-meta-snapshot">Sign in to begin</span></div>
+          <div><span class="k">Streak</span><span class="v" id="dash-meta-streak">—</span></div>
+          <div><span class="k">Live Signals</span><span class="v" id="dash-meta-signals">0</span></div>
+        </div>
+      </div>
+
+      <!-- Planet / orb with flowing neon waves -->
+      <div class="dash-hero-planet" aria-hidden="true">
+        <div class="planet-stage">
+          <div class="planet-wave planet-wave-1"></div>
+          <div class="planet-wave planet-wave-2"></div>
+          <div class="planet-wave planet-wave-3"></div>
+          <div class="planet-orb">
+            <div class="planet-core"></div>
+            <div class="planet-halo"></div>
+            <div class="planet-ring"></div>
+          </div>
+        </div>
+
+        <!-- Right-side glass card: Private. Secure. Supportive. -->
+        <aside class="dash-hero-glass reveal-fade">
+          <div class="dhg-eyebrow">PRIVATE · SECURE · SUPPORTIVE</div>
+          <h3 class="dhg-title">A safe space built for those who serve.</h3>
+          <p class="dhg-body">Your wellbeing signals are pseudonymous, encrypted in transit, and only visible to the welfare professionals you authorise. You stay in control.</p>
+          <ul class="dhg-list">
+            <li><span class="dhg-dot"></span> Pseudonymous personnel IDs</li>
+            <li><span class="dhg-dot"></span> Explicit consent for every signal</li>
+            <li><span class="dhg-dot"></span> Human-led decisions, AI-supported</li>
+          </ul>
+          <a class="dhg-link" href="#privacy">Read privacy principles →</a>
+        </aside>
+      </div>
+    </div>
+
+    <!-- Greet strip (preserved real-data binding) -->
+    <div class="dash-top">
+      <div>
+        <div class="dash-greet" id="dash-greet">Welcome.</div>
+        <div class="dash-sub" id="dash-sub">Sign in to see your wellbeing snapshot.</div>
+      </div>
+      <div class="dash-status"><span class="dot-live"></span> LIVE</div>
+    </div>
+
+    <!-- Real-data intelligence cards (bound to /api/ai-friend/report) -->
+    <div class="dash-cards">
+      <!-- Overall estimate card -->
+      <div class="dcard dcard-overall reveal-fade" id="dcard-overall">
+        <div class="dcard-head">
+          <div class="dcard-eyebrow">OVERALL ESTIMATE</div>
+          <div class="dcard-tag" id="overall-tag">—</div>
+        </div>
+        <div class="dcard-overall-primary" id="rep-overall-primary">
+          <div class="report-overall-cell primary"><div class="report-overall-cell-label">MOOD</div><div class="report-overall-cell-val">—</div></div>
+          <div class="report-overall-cell primary"><div class="report-overall-cell-label">STRESS</div><div class="report-overall-cell-val">—</div></div>
+          <div class="report-overall-cell primary"><div class="report-overall-cell-label">ANXIETY</div><div class="report-overall-cell-val">—</div></div>
+          <div class="report-overall-cell primary"><div class="report-overall-cell-label">RECOVERY</div><div class="report-overall-cell-val">—</div></div>
+        </div>
+        <div class="dcard-overall-grid" id="rep-overall">
+          <!-- app.js replaces innerHTML — kept for backward compatibility -->
+        </div>
+        <div class="dcard-overall-secondary" id="rep-overall-secondary">
+          <!-- populated by app.js with secondary metrics: loneliness, fatigue, emotional_exhaustion, confidence -->
+        </div>
+        <div class="dcard-foot muted small">30-day average of your voluntary signals.</div>
+      </div>
+
+      <!-- Dominant emotions -->
+      <div class="dcard dcard-emotions reveal-fade">
+        <div class="dcard-head"><div class="dcard-eyebrow">DOMINANT EMOTIONS</div></div>
+        <div class="dcard-chips" id="rep-emotions">
+          <div class="muted small">No signals recorded yet.</div>
+        </div>
+        <div class="dcard-foot muted small">Aggregated across your recent conversations.</div>
+      </div>
+
+      <!-- Themes -->
+      <div class="dcard dcard-themes reveal-fade">
+        <div class="dcard-head"><div class="dcard-eyebrow">THEMES</div></div>
+        <div class="dcard-chips" id="rep-themes">
+          <div class="muted small">No themes detected yet.</div>
+        </div>
+        <div class="dcard-foot muted small">Topics your language surfaces — what you talk about most.</div>
+      </div>
+    </div>
+
+    <!-- Second row: positive changes / potential stressors / protective factors -->
+    <div class="dash-cards dash-cards-row2">
+      <div class="dcard dcard-positive reveal-fade">
+        <div class="dcard-head">
+          <div class="dcard-eyebrow"><span class="dot dot-pos"></span> POSITIVE CHANGES</div>
+        </div>
+        <div class="dcard-list" id="rep-positive">
+          <div class="item muted small">No positive changes detected yet.</div>
+        </div>
+        <div class="dcard-foot muted small">Trends in your last 7 days vs prior period.</div>
+      </div>
+
+      <div class="dcard dcard-stressors reveal-fade">
+        <div class="dcard-head">
+          <div class="dcard-eyebrow"><span class="dot dot-risk"></span> POTENTIAL STRESSORS</div>
+        </div>
+        <div class="dcard-list" id="rep-stressors">
+          <div class="item muted small">No stressors flagged yet.</div>
+        </div>
+        <div class="dcard-foot muted small">Signals that may be contributing to elevated stress.</div>
+      </div>
+
+      <div class="dcard dcard-protective reveal-fade">
+        <div class="dcard-head">
+          <div class="dcard-eyebrow"><span class="dot dot-safe"></span> PROTECTIVE FACTORS</div>
+        </div>
+        <div class="dcard-list" id="rep-protective">
+          <div class="item muted small">No protective factors recorded yet.</div>
+        </div>
+        <div class="dcard-foot muted small">Things helping you stay balanced.</div>
+      </div>
+    </div>
+
+    <!-- Forecast + AI Friend Glass Card (kept for compatibility with existing refreshers) -->
+    <div class="dash-cards dash-cards-row3">
+      <div class="dcard dcard-forecast reveal-fade">
+        <div class="dcard-head"><div class="dcard-eyebrow">7-DAY WELFARE FORECAST</div></div>
+        <div class="forecast-row">
+          <div class="forecast-cell">
+            <div class="forecast-cell-label">Current</div>
+            <div class="forecast-cell-val" id="fc-current">—</div>
+            <div class="forecast-cell-level" id="fc-current-level">—</div>
+          </div>
+          <div class="forecast-arrow">→</div>
+          <div class="forecast-cell">
+            <div class="forecast-cell-label">Predicted</div>
+            <div class="forecast-cell-val" id="fc-predicted">—</div>
+            <div class="forecast-cell-level" id="fc-predicted-level">—</div>
+          </div>
+          <div class="forecast-cell">
+            <div class="forecast-cell-label">Confidence</div>
+            <div class="forecast-cell-val" id="fc-confidence">—</div>
+          </div>
+        </div>
+        <div class="forecast-signals">
+          <div class="forecast-signals-title">Contributing signals</div>
+          <ul class="forecast-signals-list" id="fc-signals"><li class="muted small">Log a check-in or chat with AI Friend to see signals.</li></ul>
+        </div>
+        <div class="dcard-foot muted small">A decision-support estimate. Not a diagnosis.</div>
+      </div>
+
+      <div class="dcard dcard-ai reveal-fade">
+        <div class="ai-glass-head">
+          <div class="ai-glass-icon">✦</div>
+          <div>
+            <div class="ai-glass-title">AI FRIEND</div>
+            <div class="ai-glass-sub">A space to talk, reflect, and feel supported.</div>
+          </div>
+        </div>
+        <div class="ai-glass-stats" id="ai-glass-stats">
+          <div class="ags"><div class="ags-label">Mood</div><div class="ags-val" data-glass="mood">—</div></div>
+          <div class="ags"><div class="ags-label">Stress</div><div class="ags-val" data-glass="stress">—</div></div>
+          <div class="ags"><div class="ags-label">Recovery</div><div class="ags-val" data-glass="recovery">—</div></div>
+        </div>
+        <div class="ai-glass-actions">
+          <a class="btn primary" href="#ai-friend">💬 Start Chat</a>
+          <a class="btn ghost" href="#voice">🎙 Talk</a>
+        </div>
+        <div class="ai-glass-foot muted small">Private • Supportive • Available anytime</div>
+      </div>
+    </div>
+
+    <!-- Mindful activity + Daily check-in form (preserved) -->
+    <div class="soldier-hub soldier-only hidden">
+      <div class="soldier-profile-card" id="sol-profile">
+        <div class="soldier-profile-header">
+          <div class="soldier-avatar">🎖️</div>
+          <div class="soldier-info">
+            <h4>Personnel ID: <span id="sol-pid">S-42901</span></h4>
+            <p>Rank: <span id="sol-rank">Sgt</span> · Unit: <span id="sol-unit">4th Battalion, 12th Regt</span></p>
+          </div>
+        </div>
+        <div class="soldier-readiness-box" id="sol-readiness">
+          <div class="readiness-label">Duty Readiness</div>
+          <div class="readiness-value readiness-READY" id="sol-readiness-val">READY</div>
+        </div>
+        <div class="soldier-duty-status">
+          <span class="bio-label">Current Status:</span>
+          <select class="duty-select" id="sol-duty-status">
+            <option value="on_duty">On Duty</option>
+            <option value="off_duty">Off Duty</option>
+            <option value="night_duty">Night Duty</option>
+            <option value="field">Field</option>
+            <option value="leave">Leave</option>
+          </select>
+        </div>
+      </div>
+      <div class="soldier-profile-card">
+        <div class="bio-label" style="margin-bottom:16px; font-size:12px;">Biometric Indicators (Estimated)</div>
+        <div class="soldier-bio-grid" id="sol-bio">
+          <div class="bio-indicator">
+            <span class="bio-label">Stress</span>
+            <div class="bio-val-row"><span class="bio-val" id="bio-stress">42%</span><div class="bio-bar-bg"><div class="bio-bar-fill" style="width:42%"></div></div></div>
+          </div>
+          <div class="bio-indicator">
+            <span class="bio-label">Fatigue</span>
+            <div class="bio-val-row"><span class="bio-val" id="bio-fatigue">28%</span><div class="bio-bar-bg"><div class="bio-bar-fill" style="width:28%"></div></div></div>
+          </div>
+          <div class="bio-indicator">
+            <span class="bio-label">Sleep Recovery</span>
+            <div class="bio-val-row"><span class="bio-val" id="bio-sleep">74%</span><div class="bio-bar-bg"><div class="bio-bar-fill" style="width:74%"></div></div></div>
+          </div>
+          <div class="bio-indicator">
+            <span class="bio-label">Resilience</span>
+            <div class="bio-val-row"><span class="bio-val" id="bio-resilience">81%</span><div class="bio-bar-bg"><div class="bio-bar-fill" style="width:81%"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dash-actions" id="checkin-anchor">
+      <div class="act-lbl">MINDFUL ACTIVITY</div>
+      <div class="mindful-activity" id="mindful-activity" aria-live="polite">
+        <div class="ma-cell"><div class="ma-num" data-ma="played">0</div><div class="ma-lbl">Games played</div></div>
+        <div class="ma-cell"><div class="ma-num" data-ma="completed">0</div><div class="ma-lbl">Completed</div></div>
+        <div class="ma-cell"><div class="ma-num" data-ma="minutes">0</div><div class="ma-lbl">Calm minutes</div></div>
+        <div class="ma-cell"><div class="ma-num" data-ma="fav">—</div><div class="ma-lbl">Favourite</div></div>
+      </div>
+    </div>
+    <div class="dash-actions">
+      <div class="act-lbl">DAILY CHECK-IN</div>
+      <form id="checkin-form" class="checkin-form">
+        <label>Mood <input type="range" min="0" max="100" name="mood" value="60"><span class="cv">60</span></label>
+        <label>Stress <input type="range" min="0" max="100" name="stress" value="40"><span class="cv">40</span></label>
+        <label>Sleep <input type="range" min="0" max="100" name="sleep" value="70"><span class="cv">70</span></label>
+        <label>Energy <input type="range" min="0" max="100" name="energy" value="55"><span class="cv">55</span></label>
+        <label>Focus <input type="range" min="0" max="100" name="focus" value="60"><span class="cv">60</span></label>
+        <label>Recovery <input type="range" min="0" max="100" name="recovery" value="65"><span class="cv">65</span></label>
+        <label class="soldier-only">Workload <input type="range" min="0" max="100" name="workload" value="50"><span class="cv">50</span></label>
+        <label class="full">What is affecting you today? <input type="text" name="note" placeholder="Optional note — kept private"></label>
+        <button class="btn primary" type="submit">Save check-in</button>
+        <div class="form-msg"></div>
+      </form>
+    </div>
+    <div class="dash-actions soldier-only hidden">
+      <div class="act-lbl">DUTY PRESSURE CHECK</div>
+      <form id="pressure-form" class="checkin-form">
+        <label>Op Pressure <input type="range" min="0" max="100" name="operational_pressure" value="30"><span class="cv">30</span></label>
+        <label>Workload Pressure <input type="range" min="0" max="100" name="workload_pressure" value="40"><span class="cv">40</span></label>
+        <label>Sleep Disruption <input type="range" min="0" max="100" name="sleep_disruption" value="20"><span class="cv">20</span></label>
+        <label>Emotional Load <input type="range" min="0" max="100" name="emotional_load" value="30"><span class="cv">30</span></label>
+        <label class="full">Pressure drivers? <input type="text" name="note" placeholder="Optional — e.g. 'upcoming inspection'"></label>
+        <button class="btn primary" type="submit">Save Pressure Check</button>
+        <div class="form-msg"></div>
+      </form>
+    </div>
+    <div id="early-warning-banner" class="soldier-only hidden" style="margin-bottom:24px; padding:16px; border:1px solid var(--gold); background:rgba(217,164,65,.1); border-radius:12px; display:flex; align-items:center; gap:12px;">
+      <span style="color:var(--gold); font-weight:500; font-size:12px; letter-spacing:.1em;">⚠️ SIGNAL DETECTED:</span>
+      <span id="warning-text" style="font-size:13px; color:var(--text);">Possible stress signal detected in recent trends. Consider a short recovery practice.</span>
+    </div>
+
+    <!-- Bottom glass quote bar -->
+    <div class="dash-quote reveal-fade" aria-label="Daily reflection">
+      <div class="dq-eyebrow">DAILY REFLECTION</div>
+      <blockquote id="dash-quote-text">"Showing up is the first victory. The rest follows, slowly, in your own time."</blockquote>
+      <div class="dq-foot muted small">A quiet reminder. Not advice. Not a diagnosis.</div>
+    </div>
+
+    <!-- Welfare / Command Overview (Aggregated Trends) -->
+    <div class="intel soldier-only hidden" id="command-overview" data-role-link="commander,welfare_officer,admin">
+      <div class="intel-head">
+        <div class="eyebrow"><span class="dot gold"></span>COMMAND OVERVIEW</div>
+        <h3 class="reveal-text">Aggregated Unit Wellbeing</h3>
+        <p class="muted small">Anonymized trends across the unit. No individual data displayed.</p>
+      </div>
+      <div class="intel-grid" id="command-grid">
+        <div class="intel-status">
+          <div class="intel-status-label">UNIT RISK LEVEL</div>
+          <div class="intel-status-value" id="unit-risk-val">LOW</div>
+          <div class="intel-status-sub" id="unit-risk-sub">Overall unit signals are stable.</div>
+        </div>
+        <div class="intel-signals">
+          <div class="intel-block-title">Risk Distribution</div>
+          <div id="unit-distribution" style="display:flex; flex-direction:column; gap:8px;">
+            <!-- Distribution bars go here -->
+          </div>
+        </div>
+        <div class="intel-recs">
+          <div class="intel-block-title">Recommended Intervention</div>
+          <div class="intel-rec-card" id="unit-rec-card">
+            <div class="intel-rec-name">Unit-wide recovery session</div>
+            <div class="intel-rec-why muted small">Recommended based on average workload increase.</div>
+            <a class="btn ghost small" href="#recovery">Open Studio →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+      <div class="intel-head">
+        <div class="eyebrow"><span class="dot"></span>03 · WELLBEING INTELLIGENCE</div>
+        <h3 class="reveal-text">Predictive signals, transparent explanations.</h3>
+        <p class="muted small">Based on your self-reported check-ins. Not a clinical assessment.</p>
+      </div>
+      <div class="intel-grid" id="intel-grid">
+        <div class="intel-status" id="intel-status">
+          <div class="intel-status-label">WELLBEING STATE</div>
+          <div class="intel-status-value" id="intel-status-value">—</div>
+          <div class="intel-status-sub" id="intel-status-sub">Log a check-in to see your state.</div>
+        </div>
+        <div class="intel-signals" id="intel-signals">
+          <div class="intel-block-title">Contributing signals</div>
+          <ul id="intel-signals-list" class="signal-list"><li class="muted small">No signals yet.</li></ul>
+        </div>
+        <div class="intel-recs" id="intel-recs">
+          <div class="intel-block-title">Recommended next step</div>
+          <div class="intel-rec-card" id="intel-rec-card">
+            <div class="intel-rec-name">A 5-minute Box Breathing exercise</div>
+            <div class="intel-rec-why muted small">Downregulates acute stress and improves recovery.</div>
+            <a class="btn ghost small" href="#recovery">Open Recovery Studio →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Longitudinal Trends (Soldier Mode Only) -->
+      <div class="soldier-only hidden" style="margin-top:32px; padding-top:32px; border-top:1px solid var(--border);">
+        <div class="intel-block-title" style="margin-bottom:16px;">LONGITUDINAL WELLBEING TRENDS</div>
+        <div id="wellbeing-timeline" style="height:180px; width:100%; position:relative; background:rgba(255,255,255,.02); border-radius:12px; padding:16px; border:1px solid var(--border);">
+          <div id="timeline-chart" style="width:100%; height:100%; display:flex; align-items:flex-end; gap:8px;">
+            <!-- Bars will be injected here -->
+          </div>
+          <div class="muted small" style="text-align:center; margin-top:8px; font-size:10px; letter-spacing:.1em;">LAST 14 DAYS TREND</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+      <div class="soldier-welfare-grid soldier-only hidden">
+        <div class="welfare-card" id="welfare-schemes">
+          <div class="icon">📜</div>
+          <h4>Welfare Schemes</h4>
+          <p>Access current personnel benefits, housing allowances, and family support packages.</p>
+          <a href="#" class="welfare-btn">View Portal</a>
+        </div>
+        <div class="welfare-card" id="welfare-counselling">
+          <div class="icon">🎧</div>
+          <h4>Confidential Counselling</h4>
+          <p>Secure, encrypted access to military-specialist psychologists and trauma experts.</p>
+          <a href="#counsellors" class="welfare-btn">Book Session</a>
+        </div>
+        <div class="welfare-card" id="welfare-emergency">
+          <div class="icon">🚨</div>
+          <h4>Emergency Support</h4>
+          <p>Immediate escalation protocols for acute stress or critical incident response.</p>
+          <a href="#" class="welfare-btn">Trigger Support</a>
+        </div>
+        <div class="welfare-card" id="welfare-info">
+          <div class="icon">ℹ️</div>
+          <h4>Important Information</h4>
+          <p>Official directives on mental health leave and psychological wellness protocols.</p>
+          <a href="#" class="welfare-btn">Read Guidelines</a>
+        </div>
+      </div>
+
+  <!-- VOICE COMPANION -->
+  <section id="voice" class="voice-sec">
+    <div class="section-head">
+      <div class="eyebrow reveal"><span class="dot"></span>04 · VOICE COMPANION</div>
+      <h2 class="reveal-text">Talk it out. Hands-free.</h2>
+      <p class="reveal">A real-time voice companion for moments when typing is not the right interface. Listening, thinking, speaking — in a continuous loop.</p>
+    </div>
+
+    <div class="voice-stage reveal" id="voice-stage">
+      <div class="companion-stage cat-side" aria-hidden="true">
+        <div class="synapse-soldier soldier-md" id="voice-cat" data-cat-host="voice">
+          <div class="companion-caption" id="voice-companion-caption">SYNAPSE · IDLE</div>
+        </div>
+      </div>
+      <div class="voice-orb" id="voice-orb">
+        <div class="orb-ring r1"></div>
+        <div class="orb-ring r2"></div>
+        <div class="orb-ring r3"></div>
+        <div class="orb-core"></div>
+        <div class="orb-state" id="orb-state">IDLE</div>
+      </div>
+      <div class="voice-info">
+        <div class="voice-title">Voice Companion</div>
+        <div class="voice-sub">Press the microphone to begin. You can speak naturally — short pauses are welcome.</div>
+      </div>
+      <div class="voice-waveform" id="voice-waveform"></div>
+      <div class="voice-transcript" id="voice-transcript" aria-live="polite"></div>
+      <div class="voice-meta">
+        <div class="voice-timer" id="voice-timer">00:00</div>
+        <div class="voice-controls">
+          <button class="vc-btn" id="vc-mute" title="Mute" aria-label="Mute">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 4v16M5 9l-3 3 3 3M19 9l3 3-3 3"/><path d="M8 4h8"/></svg>
+          </button>
+          <button class="vc-btn primary" id="vc-mic" title="Start voice session" aria-label="Start voice session">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>
+          </button>
+          <button class="vc-btn" id="vc-end" title="End" aria-label="End session">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12a9 9 0 0 1 18 0v3a2 2 0 0 1-2 2h-1v-5h3"/></svg>
+          </button>
+        </div>
+        <div class="voice-volume">
+          <label>Volume</label>
+          <input type="range" id="vc-volume" min="0" max="100" value="80">
+        </div>
+      </div>
+    </div>
+
+    <div class="voice-options">
+      <div class="voice-card">
+        <div class="vc-title">Voice Identity</div>
+        <div class="vc-desc">Enroll a short phrase so SYNAPSE can recognise your voice. <strong>Requires explicit consent.</strong></div>
+        <div class="vc-row">
+          <input type="text" id="enroll-phrase" placeholder="Verification phrase" value="My voice is my signature">
+          <button class="btn ghost" id="vc-enroll">Enroll Voice</button>
+          <button class="btn ghost danger" id="vc-delete">Delete Voice Profile</button>
+        </div>
+        <div class="vc-status muted small" id="vc-enroll-status">Not enrolled.</div>
+
+        <div class="vc-divider"></div>
+        <div class="vc-title">Voice Library (Authorized Voice)</div>
+        <div class="vc-desc">
+          Upload or record your own voice notes — SYNAPSE will use them to build your authorized voice profile.
+          <strong>Only your voice is allowed.</strong> Voice cloning requires the provider to be configured; otherwise the AI speaks in a synthetic voice and the UI clearly says so.
+        </div>
+        <div class="vc-row">
+          <button class="btn primary" id="vc-record">Record sample</button>
+          <label class="btn ghost" for="vc-upload-file">Upload audio file</label>
+          <input type="file" id="vc-upload-file" accept="audio/*" hidden>
+        </div>
+        <div class="vc-status muted small" id="vc-profile-status">No voice profile yet.</div>
+        <div class="vc-row" style="margin-top: 8px;">
+          <button class="btn ghost hidden" id="vc-retry" type="button">Retry voice authorization</button>
+        </div>
+        <div id="vc-samples-list" class="vc-samples-list"></div>
+
+        <div class="vc-row" style="margin-top: 12px;">
+          <label class="vc-toggle">
+            <input type="checkbox" id="vc-use-auth" checked>
+            <span>Speak replies in my authorized voice when available</span>
+          </label>
+        </div>
+        <div id="vc-voice-used" class="vc-voice-used muted small">Voice used: synthetic (calm)</div>
+      </div>
+
+      <div class="voice-card">
+        <div class="vc-title">Voice Style</div>
+        <div class="vc-desc">Choose a tone for the assistant voice. When an authorized voice is ready and consent is given, replies will be spoken in your voice — otherwise a synthetic voice matching the selected style is used.</div>
+        <div class="vc-row">
+          <select id="voice-style">
+            <option value="calm">Calm</option>
+            <option value="professional">Professional</option>
+            <option value="warm">Warm</option>
+            <option value="neutral">Neutral</option>
+            <option value="reassuring">Reassuring</option>
+          </select>
+          <button class="btn ghost" id="vc-preview">Preview Voice</button>
+        </div>
+        <div class="vc-row vc-tune" aria-label="Voice tuning">
+          <label class="vc-tune-l">Speed <input type="range" id="vc-speed" min="60" max="140" value="100" aria-label="Speaking speed"></label>
+          <label class="vc-tune-l">Stability <input type="range" id="vc-stability" min="0" max="100" value="70" aria-label="Stability"></label>
+          <label class="vc-tune-l">Expressiveness <input type="range" id="vc-expressiveness" min="0" max="100" value="25" aria-label="Expressiveness"></label>
+          <button class="btn ghost small" id="vc-tune-reset" type="button">Reset</button>
+        </div>
+        <div class="vc-status muted small">Provider: <span id="vc-provider">demo</span> · <span id="vc-provider-sub">Demo mode is enabled when no API key is configured — the assistant will always clearly label which voice is speaking.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI ASSISTANT (text) -->
+  <section id="ai" class="ai-sec">
+    <div class="section-head">
+      <div class="eyebrow reveal"><span class="dot"></span>05 · SYNAPSE AI</div>
+      <h2 class="reveal-text">A calm, non-judgmental<br/>space to think out loud.</h2>
+      <p class="reveal">SYNAPSE AI is an AI-assisted wellbeing support interface. It is not a medical diagnosis or replacement for professional care.</p>
+    </div>
+    <div class="ai-shell reveal">
+      <aside class="ai-side">
+        <div class="ai-side-head">
+          <div class="ai-side-title">Mood Context</div>
+          <div class="ai-side-sub" id="ai-context-sub">Sign in to see your latest signals.</div>
+        </div>
+        <div class="ai-mood" id="ai-mood">
+          <div class="mood-row"><span class="m-lbl">Mood</span><div class="m-bar"><i style="--p:0%"></i></div><span class="m-val">—</span></div>
+          <div class="mood-row"><span class="m-lbl">Stress</span><div class="m-bar"><i style="--p:0%"></i></div><span class="m-val">—</span></div>
+          <div class="mood-row"><span class="m-lbl">Sleep</span><div class="m-bar"><i style="--p:0%"></i></div><span class="m-val">—</span></div>
+        </div>
+        <div class="ai-res">
+          <div class="ai-res-head">Support Resources</div>
+          <div class="ai-res-item"><span class="dot-cyan"></span>Box Breathing · 4 min</div>
+          <div class="ai-res-item"><span class="dot-cyan"></span>Sleep Preparation</div>
+          <div class="ai-res-item"><span class="dot-cyan"></span>Connect with a counsellor</div>
+        </div>
+        <div class="ai-disclaimer">SYNAPSE AI assists and guides — it does not diagnose. If you are in crisis, please contact emergency services.</div>
+      </aside>
+      <div class="ai-chat" role="region" aria-label="SYNAPSE AI conversation">
+        <div class="ai-chat-head">
+          <div class="ai-avatar" aria-hidden="true"><span></span></div>
+          <div>
+            <div class="ai-name">SYNAPSE AI</div>
+            <div class="ai-status"><span class="dot-live" aria-hidden="true"></span> Online · Listening</div>
+          </div>
+          <div class="ai-badge">SUPPORT MODE</div>
+        </div>
+        <div class="ai-conv" id="ai-conv" aria-live="polite">
+          <div class="msg bot"><p>Hello, I'm SYNAPSE AI. I'm here to listen and help you find the right next step. What's on your mind today?</p></div>
+        </div>
+        <div class="ai-suggest" aria-label="Suggested prompts">
+          <div class="sug-label">SUGGESTED</div>
+          <button class="sug" type="button" data-prompt="Help me calm down">Help me calm down</button>
+          <button class="sug" type="button" data-prompt="I can't sleep">I can't sleep</button>
+          <button class="sug" type="button" data-prompt="I want to talk to a counsellor">Talk to a counsellor</button>
+          <button class="sug" type="button" data-prompt="I'm feeling better today">I'm feeling better</button>
+          <button class="sug soldier-only hidden" id="escalate-btn" type="button" style="border-color:var(--gold); color:var(--gold);">🆘 Talk to Human</button>
+        </div>
+        <form class="ai-input" id="ai-form" data-chat="primary">
+          <input id="ai-input" type="text" placeholder="Share what's on your mind…" aria-label="Message SYNAPSE AI" autocomplete="off" required>
+          <button class="send" type="submit" aria-label="Send message">→</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREENING -->
+  <section id="screening" class="screening">
+    <div class="section-head">
+      <div class="eyebrow reveal"><span class="dot"></span>06 · SCREENING</div>
+      <h2 class="reveal-text">A brief, confidential check.</h2>
+      <p class="reveal">Screening tools are designed to help you understand where you are — not to provide a medical diagnosis.</p>
+    </div>
+    <div class="screening-card reveal" id="screening-card">
+      <form id="screening-form">
+        <div class="instr-pick">
+          <label><input type="radio" name="instrument" value="PHQ" checked> PHQ-style (Mood)</label>
+          <label><input type="radio" name="instrument" value="GAD"> GAD-style (Anxiety)</label>
+        </div>
+        <div class="screening-progress" id="screening-progress" aria-hidden="true">
+          <div class="screening-progress-fill" id="screening-progress-fill"></div>
+          <div class="screening-progress-text" id="screening-progress-text">0 / 0</div>
+        </div>
+        <div id="screening-qs" class="screening-qs"></div>
+        <div class="screening-actions">
+          <button class="btn ghost" type="button" id="screening-prev" hidden>Back</button>
+          <button class="btn primary" type="submit" id="screening-submit">Submit Screening</button>
+        </div>
+        <div class="form-msg"></div>
+      </form>
+      <div id="screening-result" class="screening-result hidden"></div>
+      <div class="screening-history" id="screening-history"></div>
+    </div>
+  </section>
+
+  <!-- RECOVERY STUDIO -->
+  <section id="recovery" class="recovery-sec">
+    <div class="section-head">
+      <div class="eyebrow reveal"><span class="dot"></span>07 · RECOVERY STUDIO</div>
+      <h2 class="reveal-text">Clinically reviewed practices<br/>for daily resilience.</h2>
+      <p class="reveal">Box breathing, grounding, sleep preparation — short, structured exercises designed for high-readiness environments.</p>
+    </div>
+
+    <div class="recovery-stats" id="recovery-stats">
+      <div class="rs-cell"><div class="rs-num" id="rs-sessions">0</div><div class="rs-lbl">Sessions completed</div></div>
+      <div class="rs-cell"><div class="rs-num" id="rs-minutes">0</div><div class="rs-lbl">Minutes recovered</div></div>
+      <div class="rs-cell"><div class="rs-num" id="rs-streak">0</div><div class="rs-lbl">Day recovery streak</div></div>
+      <div class="rs-cell"><div class="rs-num" id="rs-fav">—</div><div class="rs-lbl">Favourite practice</div></div>
+    </div>
+
+    <div class="recovery-grid" id="exercise-grid"></div>
+
+    <!-- Player -->
+    <div class="recovery-player hidden" id="recovery-player">
+      <div class="rp-head">
+        <div>
+          <div class="rp-title" id="rp-title">Box Breathing</div>
+          <div class="rp-sub muted small" id="rp-sub">Four equal sides of breath for steady regulation.</div>
+        </div>
+        <button class="btn ghost" id="rp-close">Close</button>
+      </div>
+      <div class="rp-stage">
+        <div class="breath-orb" id="breath-orb">
+          <div class="breath-text" id="breath-text">READY</div>
+        </div>
+      </div>
+      <div class="rp-controls">
+        <button class="btn primary" id="rp-toggle">Start</button>
+        <button class="btn ghost" id="rp-complete">Mark complete</button>
+        <div class="rp-counter muted small" id="rp-counter">0 / 0 cycles</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DUTY DEBRIEF & SHIFT TRACKING -->
+  <section id="duty-debrief" class="recovery-sec hidden">
+    <div class="section-head">
+      <div class="eyebrow reveal"><span class="dot"></span>07b · DUTY DEBRIEF & SHIFT TRACKING</div>
+      <h2 class="reveal-text">Operational Decompression<br/>& Shift Logging.</h2>
+      <p class="reveal">Document difficult experiences, track fatigue, and signal support needs after critical incidents or long shifts.</p>
+    </div>
+
+    <div class="recovery-grid" style="grid-template-columns: 1fr; max-width: 800px;">
+      <div class="ex-card" style="padding: 32px;">
+        <form id="debrief-form" style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <label class="muted small">Duty Context</label>
+            <select name="duty_context" required style="padding:12px; background:var(--glass); border:1px solid var(--border); color:var(--text); border-radius:8px;">
+              <option value="">Select Context...</option>
+              <optgroup label="Police Contexts">
+                <option>Patrol</option><option>Traffic</option><option>Emergency</option><option>Crowd Control</option><option>Investigation</option><option>Night Shift</option><option>Critical Incident</option>
+              </optgroup>
+              <optgroup label="Defence Contexts">
+                <option>Field Duty</option><option>Operations</option><option>Remote Posting</option><option>Deployment</option><option>Night Duty</option><option>Family Separation</option><option>Long Duty</option>
+              </optgroup>
+            </select>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <label class="muted small">Duration (Hours)</label>
+            <input type="number" name="duration" placeholder="e.g. 12" required style="padding:12px; background:var(--glass); border:1px solid var(--border); color:var(--text); border-radius:8px;">
+          </div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <label class="muted small">Night Duty?</label>
+            <select name="night_duty" style="padding:12px; background:var(--glass); border:1px solid var(--border); color:var(--text); border-radius:8px;">
+              <option value="0">No</option><option value="1">Yes</option>
+            </select>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <label class="muted small">Stress Level (0-100)</label>
+            <input type="range" name="stress" min="0" max="100" value="50" style="margin-top:12px;">
+          </div>
+          <div style="grid-column: span 2; display:flex; flex-direction:column; gap:8px;">
+            <label class="muted small">Incident/Experience Description</label>
+            <textarea name="experience" rows="4" placeholder="Describe the experience, fatigue levels, or difficult moments..." style="padding:12px; background:var(--glass); border:1px solid var(--border); color:var(--text); border-radius:8px; resize:none;"></textarea>
+          </div>
+          <div style="grid-column: span 2; display:flex; flex-direction:column; gap:8px;">
+            <label class="muted small">Support Needed?</label>
+            <select name="support_needed" style="padding:12px; background:var(--glass); border:1px solid var(--border); color:var(--text); border-radius:8px;">
+              <option value="none">No immediate support needed</option>
+              <option value="low">Low (Just need a chat)</option>
+              <option value="moderate">Moderate (Want a check-in)</option>
+              <option value="high">High (Requesting counsellor support)</option>
+            </select>
+          </div>
+          <div style="grid-column: span 2; text-align:right;">
+            <button type="submit" class="btn primary">Log Debrief</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- MINDFUL GAMES -->
+  <section id="games" class="games-sec">
+    <div class="section-head">
+      <div class="eyebrow reveal"><span class="dot"></span>08 · MINDFUL GAMES</div>
+      <h2 class="reveal-text">Quiet games for tired minds.</h2>
+      <p class="reveal">Nine short, calming exercises — no scores to chase, no streaks to defend. Step in, breathe, and step out when you’re ready.</p>
+    </div>
+
+    <div class="mindful-summary reveal" id="mindful-stats" aria-live="polite">
+      <div class="rs-cell"><div class="rs-num">0</div><div class="rs-lbl">Sessions played</div></div>
+      <div class="rs-cell"><div class="rs-num">0</div><div class="rs-lbl">Completed</div></div>
+      <div class="rs-cell"><div class="rs-num">0</div><div class="rs-lbl">Calm minutes</div></div>
+      <div class="rs-cell"><div class="rs-num">—</div><div class="rs-lbl">Favourite</div></div>
+    </div>
+
+    <div class="game-grid reveal" id="game-grid" role="list"></div>
+
+    <div class="recovery-player hidden" id="game-player" role="region" aria-label="Mindful game player">
+      <div class="rp-head">
+        <div>
+          <div class="rp-title" id="game-player-title">Mindful Game</div>
+          <div class="rp-sub muted small" id="game-player-sub">A short, calming practice.</div>
+        </div>
+        <div class="rp-sub muted small" id="game-player-timer">00:00</div>
+        <button class="btn ghost" id="game-player-close" type="button">Close</button>
+      </div>
+      <div class="rp-stage" id="game-stage"></div>
+    </div>
+  </section>
+
+  <!-- COUNSELLORS -->
+  <section id="counsellors" class="counsellors-sec">
+    <div class="section-head">
+      <div class="eyebrow reveal"><span class="dot"></span>09 · COUNSELLOR MARKETPLACE</div>
+      <h2 class="reveal-text">Qualified professionals,<br/>on demand.</h2>
+      <p class="reveal">Choose a specialist, select a duration, and begin a private session. Paid by the minute, with consent at every step.</p>
+    </div>
+
+    <div class="counsellor-filters reveal">
+      <input type="text" id="filter-q" placeholder="Search by name or specialty…">
+      <select id="filter-spec">
+        <option value="">All specialisations</option>
+        <option>Stress</option><option>Anxiety</option><option>Sleep</option>
+        <option>Burnout</option><option>Trauma</option><option>Mood</option>
+        <option>Resilience</option><option>Identity</option>
+      </select>
+      <select id="filter-lang">
+        <option value="">Any language</option>
+        <option>English</option><option>Hindi</option><option>Marathi</option>
+        <option>Tamil</option><option>Bengali</option><option>Punjabi</option><option>Telugu</option>
+      </select>
+      <select id="filter-availability">
+        <option value="">All availability</option>
+        <option value="1">Online now</option>
+      </select>
+      <select id="filter-rating">
+        <option value="0">Any rating</option>
+        <option value="4.5">4.5+</option><option value="4.8">4.8+</option>
+      </select>
+    </div>
+
+    <div class="counsellor-grid" id="counsellor-grid"></div>
+  </section>
+
+  <!-- COUNSELLOR DASHBOARD -->
+  <section id="counsellor-dash" class="counsellor-dash hidden">
+    <div class="section-head">
+      <div class="eyebrow"><span class="dot"></span>COUNSELLOR DASHBOARD</div>
+      <h2 class="reveal-text">Your practice at a glance.</h2>
+    </div>
+    <div class="cdash-stats" id="cdash-stats"></div>
+    <div class="cdash-list" id="cdash-list"></div>
+  </section>
+
+  <!-- ADMIN -->
+  <section id="admin" class="admin-sec hidden">
+    <div class="section-head">
+      <div class="eyebrow"><span class="dot gold"></span>SYNAPSE COMMAND CENTER · 11</div>
+      <h2 class="reveal-text">Operational overview.</h2>
+      <p class="muted small">Aggregated, anonymised metrics. No individual mental-health content is visible here.</p>
+    </div>
+    <div class="admin-stats" id="admin-stats"></div>
+    <div class="admin-chart-wrap">
+      <div class="acw-title">Daily check-ins · last 14 days</div>
+      <div class="admin-chart" id="admin-chart"></div>
+    </div>
+  </section>
+
+  <!-- SIH 26186 — WELFARE COMMAND CENTER (welfare officer / admin) -->
+  <section id="welfare" class="welfare-sec hidden">
+    <div class="section-head">
+      <div class="eyebrow"><span class="dot gold"></span>WELFARE COMMAND CENTER</div>
+      <h2 class="reveal-text">Confidential personnel welfare intelligence.</h2>
+      <p class="muted small">Pseudonymous IDs only. Private AI Friend conversations are never shown here — only minimum-necessary welfare signals.</p>
+    </div>
+    <div class="welfare-stats" id="welfare-stats"></div>
+    <div class="welfare-grid">
+      <div class="welfare-card">
+        <div class="welfare-card-title">Stress trend (14d)</div>
+        <div class="welfare-trend" id="wf-trend-stress"></div>
+      </div>
+      <div class="welfare-card">
+        <div class="welfare-card-title">Fatigue trend (14d)</div>
+        <div class="welfare-trend" id="wf-trend-fatigue"></div>
+      </div>
+      <div class="welfare-card">
+        <div class="welfare-card-title">Recovery trend (14d)</div>
+        <div class="welfare-trend" id="wf-trend-recovery"></div>
+      </div>
+      <div class="welfare-card">
+        <div class="welfare-card-title">Deployment distribution</div>
+        <div class="welfare-trend" id="wf-deploy-dist">DEMO DATA</div>
+      </div>
+    </div>
+    <div class="welfare-queue">
+      <div class="welfare-card-title">High-priority queue</div>
+      <div class="welfare-queue-list" id="wf-queue"></div>
+    </div>
+    <div class="welfare-alerts">
+      <div class="welfare-card-title">Active alerts</div>
+      <div class="welfare-alerts-list" id="wf-alerts"></div>
+    </div>
+  </section>
+
+  <!-- SIH 26186 — COMMANDER DASHBOARD (commander / admin) -->
+  <section id="commander" class="commander-sec hidden">
+    <div class="section-head">
+      <div class="eyebrow"><span class="dot gold"></span>UNIT WELLBEING OVERVIEW</div>
+      <h2 class="reveal-text">Organisational welfare planning.</h2>
+      <p class="muted small">Aggregated, unit-level trends. No individual psychological detail is shown here.</p>
+    </div>
+    <div class="welfare-stats" id="cmd-stats"></div>
+    <div class="welfare-grid">
+      <div class="welfare-card">
+        <div class="welfare-card-title">Units</div>
+        <div class="welfare-units" id="cmd-units"></div>
+      </div>
+    </div>
+    <div class="welfare-grid">
+      <div class="welfare-card"><div class="welfare-card-title">Mood trend (14d)</div><div class="welfare-trend" id="cmd-trend-mood"></div></div>
+      <div class="welfare-card"><div class="welfare-card-title">Sleep trend (14d)</div><div class="welfare-trend" id="cmd-trend-sleep"></div></div>
+    </div>
+  </section>
+
+  <!-- SIH 26186 — AI FRIEND (personnel) -->
+  <section id="ai-friend" class="ai-friend-sec">
+    <div class="section-head">
+      <div class="eyebrow reveal"><span class="dot"></span>14 · AI FRIEND</div>
+      <h2 class="reveal-text">A quiet space to talk, reflect, feel supported.</h2>
+      <p class="muted small reveal">SYNAPSE AI Friend listens first, never diagnoses, and supports your wellbeing without ever replacing professional care.</p>
+    </div>
+
+    <div class="ai-modes" id="ai-modes" aria-label="Conversation mode">
+      <button class="ai-mode active" data-mode="chat"><span class="ai-mode-icon">💬</span><span class="ai-mode-name">Chat</span></button>
+      <button class="ai-mode" data-mode="just_listen"><span class="ai-mode-icon">🫂</span><span class="ai-mode-name">Just Listen</span></button>
+      <button class="ai-mode" data-mode="calm"><span class="ai-mode-icon">🧘</span><span class="ai-mode-name">Calm</span></button>
+      <button class="ai-mode" data-mode="late_night"><span class="ai-mode-icon">🌙</span><span class="ai-mode-name">Late Night</span></button>
+      <button class="ai-mode" data-mode="motivation"><span class="ai-mode-icon">💪</span><span class="ai-mode-name">Motivation</span></button>
+      <button class="ai-mode" data-mode="problem_solving"><span class="ai-mode-icon">🎯</span><span class="ai-mode-name">Problem Solving</span></button>
+    </div>
+
+    <div class="ai-mode-desc" id="ai-mode-desc">A space to talk, reflect, and feel supported.</div>
+
+    <div class="ai-stage">
+      <div class="companion-stage cat-side" id="ai-friend-companion-wrap" aria-hidden="true">
+        <img src="https://cdn-icons-png.flaticon.com/512/3395/3395024.png"
+             class="soldier-companion-img soldier-only hidden"
+             alt="Soldier Companion"
+             onerror="this.style.display='none'">
+        <div class="synapse-soldier soldier-md" id="ai-friend-cat" data-cat-host="friend">
+          <div class="companion-caption" id="ai-friend-companion-caption">SYNAPSE · HERE FOR YOU</div>
+        </div>
+      </div>
+      <div class="ai-conversation" id="ai-friend-conv" aria-live="polite"></div>
+      <form class="ai-input-row" id="ai-friend-form" data-chat="friend">
+        <input type="text" id="ai-friend-input" placeholder="What's on your mind? Take your time." autocomplete="off" required>
+        <button class="btn primary" type="submit">Send</button>
+      </form>
+      <div class="ai-actions">
+        <button class="btn ghost small" id="ai-clear">Clear conversation</button>
+        <a class="btn ghost small" href="#report">My Wellbeing Report</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- SIH 26186 — WELLBEING REPORT -->
+  <section id="report" class="report-sec">
+    <div class="section-head report-head">
+      <div class="eyebrow reveal"><span class="dot"></span>15 · MY WELLBEING REPORT</div>
+      <h2 class="reveal-text">Your reflection, in your own words.</h2>
+      <p class="muted small reveal">An AI-generated reflection of your voluntary wellbeing signals. Not a clinical diagnosis.</p>
+    </div>
+
+    <!-- Empty state — only shown when no real data exists (toggled by app.js) -->
+    <div id="report-empty" class="report-empty">
+      <div class="report-empty-art" aria-hidden="true">
+        <div class="report-empty-orb"></div>
+        <div class="report-empty-orb small a"></div>
+        <div class="report-empty-orb small b"></div>
+      </div>
+      <div class="report-empty-title">No reflection yet</div>
+      <p class="muted small">Complete a wellness check or talk to AI Friend to generate your wellbeing reflection.</p>
+      <a class="btn primary magnetic" href="#dashboard" id="report-empty-cta"><span>Start Wellness Check</span><span class="arrow">→</span></a>
+    </div>
+
+    <div class="report-grid" id="report-grid" data-report-grid>
+      <div class="report-card" data-report-card="overall">
+        <div class="report-title">Overall estimate</div>
+        <div class="report-overall" id="rep-overall"></div>
+      </div>
+      <div class="report-card" data-report-card="emotions">
+        <div class="report-title">Dominant emotions</div>
+        <div class="report-list" id="rep-emotions"></div>
+      </div>
+      <div class="report-card" data-report-card="themes">
+        <div class="report-title">Themes</div>
+        <div class="report-list" id="rep-themes"></div>
+      </div>
+      <div class="report-card" data-report-card="positive">
+        <div class="report-title">Positive changes</div>
+        <div class="report-list" id="rep-positive"></div>
+      </div>
+      <div class="report-card" data-report-card="stressors">
+        <div class="report-title">Potential stressors</div>
+        <div class="report-list" id="rep-stressors"></div>
+      </div>
+      <div class="report-card" data-report-card="protective">
+        <div class="report-title">Protective factors</div>
+        <div class="report-list" id="rep-protective"></div>
+      </div>
+    </div>
+    <div class="report-disclaimer muted small" id="report-disclaimer">AI-generated wellbeing reflection — not a clinical diagnosis.</div>
+  </section>
+
+  <!-- SIH 26186 — MOOD HISTORY -->
+  <section id="mood-history" class="mood-sec">
+    <div class="section-head">
+      <div class="eyebrow reveal"><span class="dot"></span>16 · MOOD HISTORY</div>
+      <h2 class="reveal-text">Trends, in your own time.</h2>
+    </div>
+    <div class="mood-tabs" id="mood-tabs">
+      <button class="mood-tab" data-range="today">Today</button>
+      <button class="mood-tab active" data-range="7d">7 Days</button>
+      <button class="mood-tab" data-range="30d">30 Days</button>
+    </div>
+    <div class="mood-grid" id="mood-grid"></div>
+  </section>
+
+  <!-- PRIVACY -->
+  <section id="privacy" class="privacy">
+    <div class="section-head">
+      <div class="eyebrow reveal"><span class="dot gold"></span>12 · PRIVACY &amp; CONSENT</div>
+      <h2 class="reveal-text">Your wellbeing is personal.</h2>
+    </div>
+    <div class="priv-controls reveal" id="priv-controls">
+      <label class="consent-row">
+        <span><strong>AI processing</strong> · SYNAPSE AI may process your check-ins, screening responses, and chat to provide supportive responses.</span>
+        <input type="checkbox" id="consent-ai" checked>
+      </label>
+      <label class="consent-row">
+        <span><strong>Voice processing</strong> · allow voice transcription and voiceprint storage for the Voice Companion.</span>
+        <input type="checkbox" id="consent-voice">
+      </label>
+      <label class="consent-row">
+        <span><strong>Counselling data</strong> · your screening and check-in context can be shared with the counsellor you book with — only with your consent.</span>
+        <input type="checkbox" id="consent-counselling" checked>
+      </label>
+      <div class="priv-actions">
+        <button class="btn ghost" id="priv-export">Export my data</button>
+        <button class="btn ghost danger" id="priv-delete-voice">Delete my voice profile</button>
+        <button class="btn ghost danger" id="priv-delete-account">Delete my account</button>
+      </div>
+    </div>
+    <div class="priv-grid">
+      <div class="priv-card"><h4>Data collected</h4><p>Check-ins, screening responses, recovery sessions, AI conversations, and — only with explicit consent — voice and counselling data.</p></div>
+      <div class="priv-card"><h4>Why we collect it</h4><p>To surface early signals, recommend helpful practices, and connect you with qualified human care when appropriate.</p></div>
+      <div class="priv-card"><h4>AI usage</h4><p>AI is bounded, transparent about limits, and routes serious concerns to a human counsellor or emergency services.</p></div>
+      <div class="priv-card"><h4>Voice data</h4><p>Voice is opt-in. Voiceprints are stored encrypted and can be deleted at any time from this page.</p></div>
+      <div class="priv-card"><h4>Counsellor data</h4><p>Only the counsellor you book with sees your context — and only what you choose to share.</p></div>
+      <div class="priv-card"><h4>Retention</h4><p>You can export or delete your data at any time. Deleting your account anonymises your record.</p></div>
+    </div>
+  </section>
+
+  <!-- RESOURCES -->
+  <section id="library" class="library-sec">
+    <div class="section-head">
+      <div class="eyebrow reveal"><span class="dot"></span>13 · RESOURCE LIBRARY</div>
+      <h2 class="reveal-text">Tools you can use right now.</h2>
+      <p class="reveal">Search, bookmark, and revisit. Curated by clinicians for daily use.</p>
+    </div>
+    <div class="library-filters reveal">
+      <input type="text" id="lib-search" placeholder="Search resources…">
+      <select id="lib-cat">
+        <option value="">All categories</option>
+        <option>Stress</option><option>Sleep</option><option>Recovery</option>
+        <option>Focus</option><option>Burnout</option><option>Mindfulness</option>
+        <option>Family</option>
+      </select>
+    </div>
+    <div class="library-grid" id="resource-list"></div>
+  </section>
+
+  <!-- RESEARCH -->
+  <section id="research" class="research">
+    <div class="section-head">
+      <div class="eyebrow reveal"><span class="dot"></span>14 · RESEARCH &amp; EVIDENCE</div>
+      <h2 class="reveal-text">Anchored to established science.</h2>
+      <p class="reveal">Every feature references established psychological, sleep, and digital-health evidence. Sources are configurable and not fabricated.</p>
+    </div>
+    <div class="research-filters">
+      <input type="text" id="research-search" placeholder="Search research…">
+      <select id="research-topic">
+        <option value="">All topics</option>
+        <option>operational stress</option><option>digital health</option>
+        <option>sleep</option><option>AI</option><option>trauma</option>
+        <option>mindfulness</option><option>screening</option>
+      </select>
+    </div>
+    <div class="research-list" id="research-list"></div>
+  </section>
+
+  <!-- CTA -->
+  <section id="cta" class="cta-final">
+    <div class="section-id center-id">SYNAPSE — DEFENCETECH × NEUROTECH</div>
+    <div class="cta-inner reveal">
+      <h2 class="reveal-text">Support the people who serve.<br/><em>Intelligently. Privately. Together.</em></h2>
+      <p class="reveal">A premium AI-powered personnel wellbeing operating system designed for:
+          <br/><span class="muted small"><strong>Uniformed Forces</strong> (Soldiers, Police, Paramilitary & Defence) ·
+          <strong>High-Stress Duty Personnel</strong> (Irregular & Demanding Schedules) ·
+          <strong>Command & Welfare Teams</strong> (Early Awareness & Support) ·
+          <strong>Counsellors</strong> (Informed, Human-led Intervention)</span></p>
+      <div class="cta-buttons reveal">
+        <a class="btn primary magnetic" href="#dashboard" id="cta-checkin"><span>Enter Command Dashboard</span><span class="arrow">→</span></a>
+        <a class="btn ghost magnetic" href="#voice">Try Voice Companion</a>
+      </div>
+      <div class="cta-micro muted small">
+        Your wellbeing, intelligently supported. · Signals before symptoms. · Support before crisis. · Private by design.
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="foot-inner">
+      <div>© 2026 SYNAPSE · Personnel Stress &amp; Welfare Intelligence</div>
+      <div class="foot-links">
+        <a href="#privacy">Privacy</a>
+        <a href="#research">Research</a>
+        <a href="#cta">Contact</a>
+      </div>
+    </div>
+  </footer>
+</main>
+
+<!-- ================== AI FRIEND (floating — direct body children so no parent can clip or stack-cover it) ================== -->
+<button id="ai-friend-float" class="ai-friend-float" type="button" aria-label="Talk to AI Friend" title="Talk to AI Friend" aria-expanded="false" aria-controls="ai-friend-panel">
+  <span class="ai-friend-ring"></span>
+  <span class="ai-friend-ring delay"></span>
+  <span class="ai-friend-core">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+      <path d="M21 12a8 8 0 0 1-11.7 7.1L4 21l1.9-5.3A8 8 0 1 1 21 12Z"/>
+      <circle cx="9"  cy="12" r="1" fill="currentColor"/>
+      <circle cx="13" cy="12" r="1" fill="currentColor"/>
+      <circle cx="17" cy="12" r="1" fill="currentColor"/>
+    </svg>
+  </span>
+  <span class="ai-friend-tip">Talk to AI Friend</span>
+</button>
+
+<div id="ai-friend-panel" class="ai-friend-panel hidden" role="dialog" aria-label="AI Friend chat" aria-modal="false">
+  <div class="ai-friend-panel-glow" aria-hidden="true"></div>
+  <div class="ai-friend-panel-inner">
+    <header class="ai-friend-panel-head">
+      <div class="ai-friend-panel-id">
+        <span class="ai-friend-panel-avatar" aria-hidden="true">✦</span>
+        <img src="https://cdn-icons-png.flaticon.com/512/3395/3395024.png"
+             class="soldier-companion-img soldier-only hidden"
+             style="width:40px; height:40px; margin:0 10px;"
+             alt="Soldier Companion"
+             onerror="this.style.display='none'">
+        <div class="synapse-soldier soldier-sm" id="ai-friend-panel-cat" data-cat-host="panel" aria-hidden="true"></div>
+        <div>
+          <div class="ai-friend-panel-title">SYNAPSE AI Friend</div>
+          <div class="ai-friend-panel-status"><span class="dot-live"></span> Online · Listening</div>
+        </div>
+      </div>
+      <button id="ai-friend-panel-close" class="ai-friend-panel-close" type="button" aria-label="Close AI Friend">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6l-12 12"/></svg>
+      </button>
+    </header>
+    <div id="ai-friend-panel-conv" class="ai-friend-panel-conv" aria-live="polite"></div>
+    <div class="ai-friend-panel-typing hidden" id="ai-friend-panel-typing">
+      <span class="dot-typing"></span><span class="dot-typing"></span><span class="dot-typing"></span>
+      <span class="muted small">SYNAPSE is typing…</span>
+    </div>
+    <form class="ai-friend-panel-form" id="ai-friend-panel-form" novalidate>
+      <input id="ai-friend-panel-input" type="text" placeholder="Share what's on your mind…" aria-label="Message SYNAPSE AI Friend" autocomplete="off">
+      <button class="ai-friend-panel-send" type="submit" aria-label="Send message">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 12l18-9-7 18-3-7-8-2z"/></svg>
+      </button>
+    </form>
+    <div class="ai-friend-panel-foot muted small">Press Enter to send · Shift+Enter for new line</div>
+  </div>
+</div>
+
+<!-- ================== MODALS ================== -->
+
+<!-- Crisis / Safety -->
+<div id="crisis-modal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <button class="modal-close" data-close>×</button>
+    <div class="crisis-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16v.01"/></svg>
+    </div>
+    <h3>Immediate Support</h3>
+    <p>If you are in danger, please contact emergency services now.</p>
+    <div id="crisis-numbers" class="crisis-numbers"></div>
+    <p class="muted small">A counsellor is available right now if you'd like to talk.</p>
+    <div class="crisis-actions">
+      <a class="btn primary" href="#counsellors">Connect with a counsellor</a>
+      <button class="btn ghost" data-close>Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Counsellor profile / booking -->
+<div id="counsellor-modal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-card wide">
+    <button class="modal-close" data-close>×</button>
+    <div class="cm-body" id="cm-body"></div>
+  </div>
+</div>
+
+<!-- Payment -->
+<div id="payment-modal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <button class="modal-close" data-close>×</button>
+    <h3>Confirm &amp; Pay</h3>
+    <div id="payment-body"></div>
+  </div>
+</div>
+
+<!-- Counselling Room -->
+<div id="room-modal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-card room-card">
+    <button class="modal-close" data-close>×</button>
+    <div class="room-head">
+      <div class="room-couns">
+        <div class="room-avatar" id="room-avatar">—</div>
+        <div>
+          <div class="room-name" id="room-name">Counsellor</div>
+          <div class="room-spec muted small" id="room-spec">Specialist</div>
+        </div>
+      </div>
+      <div class="room-timer">
+        <div class="rt-label">SESSION TIME</div>
+        <div class="rt-clock" id="rt-clock">00:00</div>
+      </div>
+    </div>
+    <div class="room-tabs">
+      <button class="rt-tab active" data-mode="text" type="button">Text</button>
+      <button class="rt-tab" data-mode="voice" type="button">Voice</button>
+      <button class="rt-tab" data-mode="video" type="button">Video</button>
+    </div>
+    <div class="room-stage" id="room-stage">
+      <div class="room-messages" id="room-messages"></div>
+      <div class="room-voice-stage hidden" id="room-voice-stage">
+        <div class="voice-orb small"><div class="orb-ring r1"></div><div class="orb-core"></div></div>
+        <div class="muted small">Demo voice channel — your browser mic is not used in demo mode.</div>
+      </div>
+      <div class="room-video-stage hidden" id="room-video-stage">
+        <div class="video-tile">
+          <div class="video-avatar" id="video-avatar">—</div>
+          <div class="muted small">Demo video channel</div>
+        </div>
+        <div class="video-tile me">
+          <div class="video-avatar me">YOU</div>
+          <div class="muted small">Your camera is off (demo)</div>
+        </div>
+      </div>
+    </div>
+    <form class="room-input" id="room-form">
+      <input type="text" id="room-input" placeholder="Type your message…" required>
+      <button class="send" type="submit">→</button>
+    </form>
+    <div class="room-foot">
+      <button class="btn ghost" id="room-extend">Extend 10 min</button>
+      <button class="btn ghost danger" id="room-report">Report issue</button>
+      <button class="btn primary" id="room-end">End session</button>
+    </div>
+  </div>
+</div>
+
+<!-- Rating -->
+<div id="rating-modal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <button class="modal-close" data-close>×</button>
+    <h3>How was your session?</h3>
+    <p class="muted small">Your rating helps other personnel and improves the platform.</p>
+    <div class="rating-stars" id="rating-stars">
+      <span data-r="1">★</span><span data-r="2">★</span><span data-r="3">★</span><span data-r="4">★</span><span data-r="5">★</span>
+    </div>
+    <textarea id="rating-text" rows="3" placeholder="Optional feedback"></textarea>
+    <div class="rating-actions">
+      <button class="btn primary" id="rating-submit">Submit rating</button>
+      <button class="btn ghost" data-close>Skip</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================== THEME CUSTOMIZATION ================== -->
+<div class="theme-backdrop" id="theme-backdrop" aria-hidden="true"></div>
+<aside class="theme-panel" id="theme-panel" role="dialog" aria-labelledby="theme-panel-title" aria-modal="false">
+  <header class="theme-panel-head">
+    <div class="theme-panel-title" id="theme-panel-title">CUSTOMIZE THEME</div>
+    <button class="theme-panel-close" id="theme-panel-close" type="button" aria-label="Close theme panel">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6l-12 12"/></svg>
+    </button>
+  </header>
+  <div class="theme-panel-body">
+    <div class="theme-row">
+      <div class="theme-row-label">MODE</div>
+      <div class="theme-segment" id="theme-mode-seg" role="tablist">
+        <button type="button" data-mode="dark" class="active">Dark</button>
+        <button type="button" data-mode="light">Light</button>
+        <button type="button" data-mode="system">System</button>
+      </div>
+    </div>
+
+    <div class="theme-row">
+      <div class="theme-row-label">ACCENT <span class="val" id="theme-accent-name">Cyan</span></div>
+      <div class="theme-swatches" id="theme-swatches" role="radiogroup" aria-label="Accent color">
+        <button type="button" data-accent="cyan"   data-rgb="98,216,232" class="active" style="background:#62D8E8;color:#62D8E8" aria-label="Cyan"></button>
+        <button type="button" data-accent="blue"   data-rgb="92,169,255" style="background:#5CA9FF;color:#5CA9FF" aria-label="Blue"></button>
+        <button type="button" data-accent="violet" data-rgb="123,95,255" style="background:#7B5FFF;color:#7B5FFF" aria-label="Violet"></button>
+        <button type="button" data-accent="mint"   data-rgb="98,216,170" style="background:#62D8AA;color:#62D8AA" aria-label="Mint"></button>
+        <button type="button" data-accent="rose"   data-rgb="255,122,168" style="background:#FF7AA8;color:#FF7AA8" aria-label="Rose"></button>
+        <button type="button" data-accent="amber"  data-rgb="217,164,65" style="background:#D9A441;color:#D9A441" aria-label="Amber"></button>
+      </div>
+    </div>
+
+    <div class="theme-row">
+      <div class="theme-row-label">GLASS INTENSITY <span class="val" id="theme-glass-val">22px</span></div>
+      <input class="theme-slider" type="range" id="theme-glass" min="6" max="36" value="22">
+    </div>
+
+    <div class="theme-row">
+      <div class="theme-row-label">ANIMATION <span class="val" id="theme-anim-val">Medium</span></div>
+      <div class="theme-segment" id="theme-anim-seg" role="tablist">
+        <button type="button" data-anim="0">Low</button>
+        <button type="button" data-anim="1" class="active">Medium</button>
+        <button type="button" data-anim="2">High</button>
+      </div>
+    </div>
+
+    <label class="theme-toggle">
+      <input type="checkbox" id="theme-glass-strong">
+      <span class="switch"></span>
+      <span>Stronger glass surfaces</span>
+    </label>
+
+    <label class="theme-toggle">
+      <input type="checkbox" id="theme-compact">
+      <span class="switch"></span>
+      <span>Compact UI density</span>
+    </label>
+  </div>
+  <div class="theme-panel-foot">
+    <button type="button" id="theme-reset">RESET</button>
+    <span>Saved automatically</span>
+  </div>
+</aside>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="scripts/main.js"></script>
+<script src="scripts/app.js"></script>
+<script src="scripts/games.js"></script>
+<script src="scripts/theme.js"></script>
+</body>
+</html>

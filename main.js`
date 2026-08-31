@@ -1,0 +1,149 @@
+(function() {
+  /* ============================================================
+     SYNAPSE — Institutional Wellbeing Platform
+     Boot & Three.js Visuals (main.js)
+     ============================================================ */
+
+  const CONFIG = {
+    sceneColor: '#071123',
+    orbColor: '#62D8E8',
+    particleColor: '#7B5FFF',
+    cameraPos: { x: 0, y: 0, z: 5 },
+    transitionSpeed: 0.05
+  };
+
+  let scene, camera, renderer, neuralNetwork, pulses = [];
+  let isBooted = false;
+
+  const initThree = () => {
+    try {
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(CONFIG.sceneColor);
+
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = CONFIG.cameraPos.z;
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      document.getElementById('app-shell').appendChild(renderer.domElement);
+
+      // Neural Network (Nodes & Edges)
+      const nodeCount = 120;
+      const nodes = [];
+      const nodeGeometry = new THREE.SphereGeometry(0.04, 16, 16);
+      const nodeMaterial = new THREE.MeshBasicMaterial({ color: CONFIG.orbColor });
+
+      for (let i = 0; i < nodeCount; i++) {
+        const node = new THREE.Mesh(nodeGeometry, nodeMaterial);
+        node.position.set(
+          (Math.random() - 0.5) * 10,
+          (Math.random() - 0.5) * 10,
+          (Math.random() - 0.5) * 10
+        );
+        scene.add(node);
+        nodes.push(node);
+      }
+
+      const edgesGeometry = new THREE.BufferGeometry();
+      const edgePositions = [];
+      const edgeColors = [];
+      const edgeMaterial = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.2 });
+
+      for (let i = 0; i < nodeCount; i++) {
+        for (let j = i + 1; j < nodeCount; j++) {
+          const dist = nodes[i].position.distanceTo(nodes[j].position);
+          if (dist < 2.5) {
+            edgePositions.push(nodes[i].position.x, nodes[i].position.y, nodes[i].position.z);
+            edgePositions.push(nodes[j].position.x, nodes[j].position.y, nodes[j].position.z);
+            edgeColors.push(0.38, 0.85, 0.91, 0.38, 0.85, 0.91);
+          }
+        }
+      }
+      edgesGeometry.setAttribute('position', new THREE.Float32BufferAttribute(edgePositions, 3));
+      edgesGeometry.setAttribute('color', new THREE.Float32BufferAttribute(edgeColors, 3));
+      const edges = new THREE.LineSegments(edgesGeometry, edgeMaterial);
+      scene.add(edges);
+
+      // Neural Pulses
+      const pulseGeometry = new THREE.SphereGeometry(0.02, 8, 8);
+      const pulseMaterial = new THREE.MeshBasicMaterial({ color: '#FFFFFF' });
+      for (let i = 0; i < 20; i++) {
+        const pulse = new THREE.Mesh(pulseGeometry, pulseMaterial);
+        pulse.userData = {
+          startNode: nodes[Math.floor(Math.random() * nodeCount)],
+          endNode: nodes[Math.floor(Math.random() * nodeCount)],
+          progress: Math.random()
+        };
+        scene.add(pulse);
+        pulses.push(pulse);
+      }
+
+      // Lighting
+      const ambientLight = new THREE.AmbientLight(0x404040, 1);
+      scene.add(ambientLight);
+      const pointLight = new THREE.PointLight(CONFIG.orbColor, 2, 20);
+      pointLight.position.set(2, 2, 2);
+      scene.add(pointLight);
+
+      animate();
+    } catch (e) {
+      console.error('Three.js Init Error:', e);
+    }
+  };
+
+  const animate = () => {
+    requestAnimationFrame(animate);
+
+    // Rotate scene slowly
+    scene.rotation.y += 0.001;
+    scene.rotation.x += 0.0005;
+
+    // Animate pulses
+    pulses.forEach(p => {
+      p.userData.progress += 0.005;
+      if (p.userData.progress > 1) {
+        p.userData.progress = 0;
+        p.userData.startNode = scene.children.filter(c => c.geometry instanceof THREE.SphereGeometry && c.scale.x === 1).sort(() => Math.random() - 0.5)[0];
+        p.userData.endNode = scene.children.filter(c => c.geometry instanceof THREE.SphereGeometry && c.scale.x === 1).sort(() => Math.random() - 0.5)[0];
+      }
+      const start = p.userData.startNode.position;
+      const end = p.userData.endNode.position;
+      p.position.lerpVectors(start, end, p.userData.progress);
+    });
+
+    renderer.render(scene, camera);
+  };
+
+  const handleResize = () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  };
+
+  const hideLoader = () => {
+    const loader = $('#loader');
+    if (!loader) return;
+    loader.classList.add('fade-out');
+    setTimeout(() => {
+      loader.classList.add('hidden');
+      $('#app-shell').classList.remove('hidden');
+      isBooted = true;
+    }, 800);
+  };
+
+  window.addEventListener('resize', handleResize);
+
+  // Boot sequence
+  window.addEventListener('DOMContentLoaded', () => {
+    initThree();
+    // Fail-safe for loader
+    setTimeout(hideLoader, 3000);
+
+    // If user is already logged in, we can skip some boot steps
+    if (localStorage.getItem('synapse_user')) {
+      hideLoader();
+    }
+  });
+
+})();

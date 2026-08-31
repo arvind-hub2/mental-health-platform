@@ -1,0 +1,19 @@
+{
+  "name": "mental-health-platform",
+  "version": "1.0.0",
+  "description": "A premium, cinematic, evidence-informed website for a digital mental health and psychological support platform designed for students in higher education.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "body-parser": "^2.3.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  }
+}
