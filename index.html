@@ -37,14 +37,6 @@
       <li><a href="#voice" data-route="voice">Voice</a></li>
       <li><a href="#screening" data-route="screening">Screening</a></li>
       <li><a href="#recovery" data-route="recovery">Recovery</a></li>
-      <li><a href="#games" data-route="games">Mindful</a></li>
-      <li><a href="#counsellors" data-route="counsellors">Counsellors</a></li>
-      <li><a href="#report" data-route="report">Report</a></li>
-      <li><a href="#mood-history" data-route="mood-history">Mood</a></li>
-      <li><a href="#library" data-route="library">Resources</a></li>
-      <li><a href="#research" data-route="research">Research</a></li>
-      <li class="hidden" data-role-link="welfare_officer,admin"><a href="#welfare" data-route="welfare">Welfare</a></li>
-      <li class="hidden" data-role-link="commander,admin,welfare_officer"><a href="#commander" data-route="commander">Unit</a></li>
     </ul>
     <div class="nav-right">
       <button class="theme-trigger" id="theme-trigger" type="button" aria-label="Customize theme" aria-controls="theme-panel" aria-expanded="false">
@@ -84,6 +76,7 @@
     <a href="#admin" id="admin-link-mobile" class="hidden">Command Center</a>
     <a href="#welfare" id="welfare-link-mobile" class="hidden">Welfare Center</a>
     <a href="#commander" id="commander-link-mobile" class="hidden">Unit Overview</a>
+    <a href="#medicine-hub" class="soldier-only hidden">Medicine Hub</a>
   </div>
 </nav>
 
@@ -733,6 +726,29 @@
     </div>
   </section>
 
+  <!-- SOLDIER MEDICINE HUB -->
+  <section id="medicine-hub" class="medicine-sec soldier-only hidden">
+    <div class="section-head">
+      <div class="eyebrow reveal"><span class="dot gold"></span>SOLDIER MEDICINE HUB</div>
+      <h2 class="reveal-text">Approved Wellness &amp; Medical Support.</h2>
+      <p class="reveal">Specialized resources for stress and wellbeing-related medicines and approved OTC products for uniformed personnel.</p>
+    </div>
+    <div class="med-controls reveal" style="max-width:1400px; margin:0 auto 40px; padding:0 40px; display:flex; justify-content:space-between; align-items:center;">
+      <div class="med-filter-group" style="display:flex; gap:12px;">
+        <button class="btn ghost small active" data-filter="all">All</button>
+        <button class="btn ghost small" data-filter="otc">OTC Wellness</button>
+        <button class="btn ghost small" data-filter="prescription">Prescription</button>
+      </div>
+      <button class="btn primary small" id="scan-prescription-btn">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><path d="M3 7V5a2 2 0 0 1 2-2h2m10 0h2a2 2 0 0 1 2 2v2m0 10v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="2"/></svg>
+        Scan Prescription
+      </button>
+    </div>
+    <div class="med-grid reveal" id="med-grid">
+      <!-- Cards injected by JS -->
+    </div>
+  </section>
+
       <div class="soldier-welfare-grid soldier-only hidden">
         <div class="welfare-card" id="welfare-schemes">
           <div class="icon">📜</div>
@@ -781,6 +797,7 @@
         <div class="orb-core"></div>
         <div class="orb-state" id="orb-state">IDLE</div>
       </div>
+
       <div class="voice-info">
         <div class="voice-title">Voice Companion</div>
         <div class="voice-sub">Press the microphone to begin. You can speak naturally — short pauses are welcome.</div>
@@ -844,6 +861,7 @@
         <div id="vc-voice-used" class="vc-voice-used muted small">Voice used: synthetic (calm)</div>
       </div>
 
+      <div class="voice-card">
       <div class="voice-card">
         <div class="vc-title">Voice Style</div>
         <div class="vc-desc">Choose a tone for the assistant voice. When an authorized voice is ready and consent is given, replies will be spoken in your voice — otherwise a synthetic voice matching the selected style is used.</div>
@@ -1625,5 +1643,176 @@
 <script src="scripts/app.js"></script>
 <script src="scripts/games.js"></script>
 <script src="scripts/theme.js"></script>
+
+  <!-- MEDICINE DETAIL MODAL -->
+  <div id="med-modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card wide">
+      <button class="modal-close" id="med-close" aria-label="Close">×</button>
+      <div id="med-detail-content">
+        <!-- Content injected by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- AI PRESCRIPTION CAMERA MODAL -->
+  <div id="rx-scan-modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <button class="modal-close" data-close>×</button>
+      <div id="rx-scan-content">
+        <!-- State 1: Upload/Capture -->
+        <div id="rx-state-upload" class="rx-state">
+          <h3>Scan Prescription</h3>
+          <p class="muted small">Upload a clear photo of your prescription. Our AI will attempt to extract the details for pharmacist verification.</p>
+          <div class="rx-upload-zone" id="rx-drop-zone">
+            <div class="rx-upload-icon">📷</div>
+            <div class="rx-upload-text">Click to upload or drag and drop</div>
+            <input type="file" id="rx-file-input" accept="image/*" hidden>
+          </div>
+          <div class="rx-upload-footer muted small">Supported formats: JPG, PNG. Max 5MB.</div>
+        </div>
+        <!-- State 2: OCR Processing -->
+        <div id="rx-state-processing" class="rx-state hidden">
+          <div class="rx-loader-wrap">
+            <div class="rx-loader-ring"></div>
+            <h3>Analyzing Prescription...</h3>
+            <p class="muted small">Extracting medicine names, strengths, and dosages. Please wait.</p>
+          </div>
+        </div>
+        <!-- State 3: Confirmation -->
+        <div id="rx-state-confirm" class="rx-state hidden">
+          <h3>Confirm AI Detection</h3>
+          <p class="muted small">The AI detected the following information. Please verify it's correct before we send it to the pharmacist.</p>
+          <div class="rx-detected-grid" id="rx-detected-info">
+            <!-- Injected by JS -->
+          </div>
+          <div class="rx-confirm-actions">
+            <button class="btn ghost" id="rx-rescan">Re-scan</button>
+            <button class="btn primary" id="rx-verify-send">Confirm & Verify</button>
+          </div>
+        </div>
+        <!-- State 4: Pharmacist Verification -->
+        <div id="rx-state-verify" class="rx-state hidden">
+          <h3>Pharmacist Verification</h3>
+          <div class="rx-verify-status">
+            <div class="rx-verify-icon">🛡️</div>
+            <div class="rx-verify-text">Request sent to licensed pharmacist. You will be notified once verified.</div>
+          </div>
+          <div class="rx-verify-timer">Estimated wait: 5-15 minutes</div>
+          <button class="btn ghost" id="rx-verify-cancel">Cancel Request</button>
+        </div>
+        <!-- State 5: Result / Purchase -->
+        <div id="rx-state-result" class="rx-state hidden">
+          <div class="rx-result-success">
+            <div class="rx-result-icon">✓</div>
+            <h3>Prescription Verified</h3>
+            <p>Your prescription has been approved by the pharmacist.</p>
+          </div>
+          <div class="rx-result-details" id="rx-final-details">
+            <!-- Injected by JS -->
+          </div>
+          <div class="rx-result-actions">
+            <button class="btn primary" id="rx-purchase-btn">Proceed to Purchase</button>
+            <button class="btn ghost" data-close>Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEDICINE DELIVERY MODAL -->
+  <div id="med-delivery-modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <button class="modal-close" data-close>×</button>
+      <div class="delivery-head">
+        <h3>Customize Delivery</h3>
+        <p class="muted small">Select the required duration. Quantity will be calculated based on prescribed dosage.</p>
+      </div>
+      <div class="delivery-body">
+        <div class="del-row">
+          <span class="del-lbl">Medicine</span>
+          <span class="del-val" id="del-med-name">—</span>
+        </div>
+        <div class="del-customizer">
+          <label>Required Days</label>
+          <div class="del-range-wrap">
+            <input type="range" id="del-days-range" min="1" max="30" value="7">
+            <span id="del-days-val">7 Days</span>
+          </div>
+        </div>
+        <div class="del-summary-grid" id="del-summary">
+          <!-- Injected by JS: Medicine | Required days | Quantity | Pharmacy | Status -->
+        </div>
+      </div>
+      <div class="delivery-foot">
+        <button class="btn primary" id="del-confirm-btn">Confirm Delivery</button>
+        <button class="btn ghost" data-close>Cancel</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- SOLDIER SIDE NAVIGATION -->
+  <div id="soldier-nav-backdrop" class="soldier-nav-backdrop hidden"></div>
+  <aside id="soldier-nav-panel" class="soldier-nav-panel hidden">
+    <div class="snp-head">
+      <div class="snp-title">Specialized Tools</div>
+      <button id="snp-close" class="snp-close" aria-label="Close navigation">×</button>
+    </div>
+    <nav class="snp-nav">
+      <a href="#report" class="snp-link" data-route="report">
+        <span class="snp-icon">📊</span>
+        <span class="snp-lbl">Wellbeing Report</span>
+      </a>
+      <a href="#mood-history" class="snp-link" data-route="mood-history">
+        <span class="snp-icon">📈</span>
+        <span class="snp-lbl">Mood History</span>
+      </a>
+      <a href="#library" class="snp-link" data-route="library">
+        <span class="snp-icon">📚</span>
+        <span class="snp-lbl">Resources</span>
+      </a>
+      <a href="#research" class="snp-link" data-route="research">
+        <span class="snp-icon">🔬</span>
+        <span class="snp-lbl">Research</span>
+      </a>
+      <a href="#medicine-hub" class="snp-link soldier-only" data-route="medicine-hub">
+        <span class="snp-icon">💊</span>
+        <span class="snp-lbl">Medicine Hub</span>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- SOLDIER RIGHT NAVIGATION -->
+  <div id="soldier-right-nav" class="soldier-only hidden">
+    <div class="srn-item" data-route="report">
+      <div class="srn-icon">📊</div>
+      <div class="srn-label"><a href="#report">Report</a></div>
+    </div>
+    <div class="srn-item" data-route="mood-history">
+      <div class="srn-icon">📈</div>
+      <div class="srn-label"><a href="#mood-history">Mood</a></div>
+    </div>
+    <div class="srn-item" data-route="library">
+      <div class="srn-icon">📚</div>
+      <div class="srn-label"><a href="#library">Resources</a></div>
+    </div>
+    <div class="srn-item" data-route="research">
+      <div class="srn-icon">🔬</div>
+      <div class="srn-label"><a href="#research">Research</a></div>
+    </div>
+    <div class="srn-item hidden" data-role-link="welfare_officer,admin" data-route="welfare">
+      <div class="srn-icon">🏥</div>
+      <div class="srn-label"><a href="#welfare">Welfare</a></div>
+    </div>
+    <div class="srn-item hidden" data-role-link="commander,admin,welfare_officer" data-route="commander">
+      <div class="srn-icon">🎖️</div>
+      <div class="srn-label"><a href="#commander">Unit</a></div>
+    </div>
+    <div class="srn-item soldier-only" data-route="medicine-hub">
+      <div class="srn-icon">💊</div>
+      <div class="srn-label"><a href="#medicine-hub">Medicine Hub</a></div>
+    </div>
+  </div>
+
 </body>
 </html>

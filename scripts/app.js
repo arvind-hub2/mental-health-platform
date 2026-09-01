@@ -28,8 +28,8 @@ const App = (() => {
     if (msg) setTimeout(() => { if (el.textContent === msg) el.textContent = ''; }, 5000);
   };
 
-  const toggleSoldierMode = () => {
-    soldierMode = !soldierMode;
+  const toggleSoldierMode = (forceState = null) => {
+    soldierMode = (forceState !== null) ? forceState : !soldierMode;
     localStorage.setItem('synapse_soldier_mode', soldierMode);
     updateSoldierModeUI();
     showToast(soldierMode ? 'Soldier Mode Activated' : 'Standard Mode Activated');
@@ -116,6 +116,14 @@ const App = (() => {
     const standardOrb = $('#standard-hero-orb');
     if (standardOrb) {
       standardOrb.classList.toggle('hidden', soldierMode);
+    }
+    // Navbar Layout
+    const nav = $('#nav');
+    if (nav) nav.classList.toggle('soldier-mode-active', soldierMode);
+
+    const rightNav = $('#soldier-right-nav');
+    if (rightNav) {
+      rightNav.classList.toggle('hidden', !soldierMode);
     }
   };
   const fmt = (n) => String(n).padStart(2, '0');
@@ -665,15 +673,20 @@ const App = (() => {
     transcript: [],
     lastVoiceUsed: 'synthetic_calm',
     authorizedAvailable: false,
-    voiceProfile: null
+    voiceProfile: null,
   };
+
   const setOrbState = (s) => {
     voice.state = s;
     const orb = $('#voice-orb');
-    orb.className = 'voice-orb ' + s;
+    if (orb) {
+      orb.className = 'voice-orb ' + s;
+    }
     const labels = { idle: 'IDLE', listening: 'LISTENING', thinking: 'THINKING', speaking: 'SPEAKING', recording_sample: 'RECORDING SAMPLE' };
-    $('#orb-state').textContent = labels[s] || s.toUpperCase();
-    // Drive the AI cat from real voice state (no-op if theme.js hasn't loaded yet).
+    const orbStateEl = $('#orb-state');
+    if (orbStateEl) orbStateEl.textContent = labels[s] || s.toUpperCase();
+
+    // Drive the AI cat from real voice state
     try {
       const catMap = {
         idle: 'idle',
@@ -686,6 +699,7 @@ const App = (() => {
       if (window.SynapseCat && window.SynapseCat.setState) window.SynapseCat.setState('voice', catState);
     } catch (_) {}
   };
+
   const tickVoiceTimer = () => {
     voice.seconds++;
     $('#voice-timer').textContent = fmtTime(voice.seconds);
@@ -795,17 +809,33 @@ const App = (() => {
           let interim = '';
           for (let i = e.resultIndex; i < e.results.length; i++) {
             const t = e.results[i][0].transcript;
-            if (e.results[i].isFinal) final += t + ' ';
+            if (e.results[i].isFinal) {
+              final += t + ' ';
+              // BARGE-IN: Interrupt AI if it's currently speaking
+              if (voice.state === 'speaking') {
+                if (voice.synth) voice.synth.cancel();
+                if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+                setOrbState('thinking');
+              }
+            }
             else interim += t;
           }
           const tr = $('#voice-transcript');
           tr.innerHTML = `<div class="t-user">${escapeHtml(final)}</div>${interim ? `<div class="muted small">${escapeHtml(interim)}</div>`:''}`;
           window._voiceLastFinal = final;
         };
-        voice.recognizer.onerror = () => { setOrbState('idle'); };
+        voice.recognizer.onerror = (e) => {
+          console.error('SR Error:', e.error);
+          if (e.error === 'no-speech') return;
+          if (e.error === 'not-allowed') showToast('Microphone access denied. Please enable it in browser settings.');
+          setOrbState('idle');
+        };
         voice.recognizer.onend = async () => {
           const text = (window._voiceLastFinal || '').trim();
-          if (!text) { setOrbState('idle'); return; }
+          if (!text) {
+            if (voice.state !== 'speaking') setOrbState('idle');
+            return;
+          }
           voice.transcript.push({ role:'user', content:text });
           setOrbState('thinking');
           try {
@@ -814,11 +844,17 @@ const App = (() => {
             voice.lastVoiceUsed = r.voice_used || 'synthetic_calm';
             voice.authorizedAvailable = !!r.authorized_voice_available;
             renderVoiceUsedLabel();
+
+            // Updated: append to history instead of replacing
             const tr = $('#voice-transcript');
-            tr.innerHTML = `<div class="t-user">${escapeHtml(text)}</div><div class="t-ai">${escapeHtml(r.reply).replace(/\n/g,'<br>')}</div><div class="voice-meta-line muted small">Voice used: <b>${r.voice_used}</b></div>`;
+            tr.innerHTML += `<div class="t-user">${escapeHtml(text)}</div><div class="t-ai">${escapeHtml(r.reply).replace(/\n/g,'<br>')}</div><div class="voice-meta-line muted small">Voice used: <b>${r.voice_used}</b></div>`;
+            tr.scrollTop = tr.scrollHeight;
+
             if (r.crisis) { openCrisisModal(); setOrbState('idle'); return; }
             setOrbState('speaking');
             await speak(r.reply, r.tts);
+
+            // Continue listening after speaking
             if (voice.recognizer && voice.sessionId) {
               setOrbState('listening');
               try { voice.recognizer.start(); } catch(e) {}
@@ -851,6 +887,7 @@ const App = (() => {
       setOrbState('idle');
     }
   };
+
 
   const endVoice = async () => {
     try { if (voice.recognizer) voice.recognizer.stop(); } catch(e) {}
@@ -1225,6 +1262,10 @@ const App = (() => {
     buildWave();
     $('#vc-mic').onclick = startVoice;
     $('#vc-end').onclick = endVoice;
+
+    // Apply initial state to UI
+    setOrbState(voice.state);
+
     $('#vc-mute').onclick = () => {
       if (voice.synth) voice.synth.cancel();
       try { if (voice.recognizer) voice.recognizer.stop(); } catch(e) {}
@@ -1292,7 +1333,18 @@ const App = (() => {
         await refreshVoiceProfile();
       } catch (e) { showToast('Delete failed.'); }
     };
+    $('#vc-delete').onclick = async () => {
+      if (!user) { $('#auth-modal').classList.remove('hidden'); return; }
+      if (!confirm('Delete your voice profile and all samples? This cannot be undone.')) return;
+      try {
+        await api('/voice', { method: 'DELETE' });
+        showToast('Voice profile deleted.');
+        await refreshVoiceProfile();
+      } catch (e) { showToast('Delete failed.'); }
+    };
+
     /* Sample recording (record button) */
+
     const recBtn = $('#vc-record');
     if (recBtn) recBtn.onclick = () => {
       if (voice.state === 'recording_sample') stopSampleRecord();
@@ -1937,8 +1989,385 @@ const App = (() => {
   };
 
   /* ============================================================
-     Notifications
+     Soldier Medicine Hub
      ============================================================ */
+  const MEDICINES_DATA = [
+    {
+      id: 1,
+      name: 'L-Theanine',
+      category: 'OTC',
+      type: 'Wellbeing',
+      desc: 'An amino acid found in tea leaves, known to promote relaxation without drowsiness.',
+      dosage: '100-200mg daily, preferably with water.',
+      warnings: 'Generally safe. Consult a doctor if taking blood pressure medication.',
+      prescriptionRequired: false
+    },
+    {
+      id: 2,
+      name: 'Magnesium Glycinate',
+      category: 'OTC',
+      type: 'Stress',
+      desc: 'A highly absorbable form of magnesium that helps regulate the nervous system and improve sleep.',
+      dosage: '200-400mg before bedtime.',
+      warnings: 'May cause digestive upset in some users. Avoid if you have kidney disease.',
+      prescriptionRequired: false
+    },
+    {
+      id: 3,
+      name: 'Ashwagandha (KSM-66)',
+      category: 'OTC',
+      type: 'Stress',
+      desc: 'An adaptogen that helps the body manage stress by lowering cortisol levels.',
+      dosage: '300-600mg daily.',
+      warnings: 'Avoid during pregnancy. May interact with thyroid medications.',
+      prescriptionRequired: false
+    },
+    {
+      id: 4,
+      name: 'Prescription Anxiolytic',
+      category: 'Prescription',
+      type: 'Stress',
+      desc: 'Clinical grade medication for acute anxiety management.',
+      dosage: 'As prescribed by your physician.',
+      warnings: 'Strictly prescription only. Potential for dependency. Must be verified by a pharmacist.',
+      prescriptionRequired: true
+    },
+    {
+      id: 5,
+      name: 'Omega-3 Fatty Acids',
+      category: 'OTC',
+      type: 'Wellbeing',
+      desc: 'Essential fats that support brain health and reduce systemic inflammation.',
+      dosage: '1000mg daily.',
+      warnings: 'May have a blood-thinning effect. Consult a doctor if on anticoagulants.',
+      prescriptionRequired: false
+    }
+  ];
+
+  const renderMedicineHub = async (filter = 'all') => {
+    const grid = $('#med-grid');
+    if (!grid) return;
+
+    // Show loading state
+    grid.innerHTML = '<div class="med-loading">Loading medicines...</div>';
+
+    try {
+      // Simulate API latency
+      await new Promise(r => setTimeout(r, 600));
+      const filtered = MEDICINES_DATA.filter(m => filter === 'all' || m.category === filter);
+
+      if (!filtered.length) {
+        grid.innerHTML = '<div class="med-empty">No medicines found matching this filter.</div>';
+        return;
+      }
+
+      grid.innerHTML = filtered.map(m => `
+        <div class="med-card ${m.category === 'Prescription' ? 'rx-card' : ''}">
+          <div class="med-cat">${m.category}</div>
+          <h4>${m.name}</h4>
+          <p class="muted small">${m.desc.slice(0, 60)}${m.desc.length > 60 ? '...' : ''}</p>
+          <button class="btn ghost small" data-med-id="${m.id}">View Details</button>
+        </div>
+      `).join('');
+
+      $$('#med-grid [data-med-id]').forEach(btn => {
+        btn.onclick = () => openMedicineModal(+btn.dataset.medId);
+      });
+    } catch (e) {
+      grid.innerHTML = '<div class="med-error">Failed to load medicines. Please try refreshing the page.</div>';
+    }
+  };
+
+
+  const openMedicineModal = (id) => {
+    const med = MEDICINES_DATA.find(m => m.id === id);
+    if (!med) return;
+
+    const modal = $('#med-modal');
+    if (!modal) return;
+
+    // Evidence-based natural alternatives based on type
+    const alternativesMap = {
+      'Stress': ['Chamomile tea', 'Magnesium-rich foods (spinach, almonds)', '4-7-8 Breathing', '15-min nature walk', 'Digital detox (1hr before bed)'],
+      'Wellbeing': ['Omega-3 rich foods (walnuts, flaxseeds)', 'Hydration (2-3L water)', 'Consistent 8h sleep cycle', 'Leafy greens & berries', 'Mindfulness meditation']
+    };
+    const alts = alternativesMap[med.type] || [];
+    const altsHtml = alts.length
+      ? `<div class="med-alts">
+          <div class="eyebrow" style="font-size:10px; margin-bottom:8px;">NATURAL ALTERNATIVES (SUPPLEMENTARY)</div>
+          <div class="alts-list">${alts.map(a => `<span class="alt-chip">${a}</span>`).join('')}</div>
+        </div>`
+      : '';
+    const rxWarning = med.prescriptionRequired
+      ? `<div class="rx-alt-warning">Do not stop or replace prescribed medicine without professional advice.</div>`
+      : '';
+
+    modal.innerHTML = `
+      <div class="modal-card">
+        <button class="modal-close" data-modal-close>×</button>
+        <div class="med-detail-header">
+          <h3>${med.name} <span class="med-tag">${med.category}</span></h3>
+          <div class="med-type">${med.type}</div>
+        </div>
+        <div class="med-detail-grid">
+          <div class="med-detail-item">
+            <strong>Description</strong>
+            <p>${med.desc}</p>
+          </div>
+          <div class="med-detail-item">
+            <strong>Dosage Guidance</strong>
+            <p>${med.dosage}</p>
+          </div>
+        </div>
+        ${altsHtml}
+        ${rxWarning}
+        <div class="med-warning-box">
+          <strong>Safety Warning:</strong> ${med.warnings}
+        </div>
+        <div class="med-detail-foot">
+          ${med.prescriptionRequired
+            ? `<button class="btn primary" id="med-rx-verify">Request Pharmacist Verification</button>`
+            : `<button class="btn primary" id="med-buy-otc">Purchase via Pharmacy</button>`}
+          <button class="btn ghost" data-modal-close>Close</button>
+        </div>
+      </div>
+    `;
+    modal.classList.remove('hidden');
+
+    if (med.prescriptionRequired) {
+      $('#med-rx-verify').onclick = () => {
+        showToast('Prescription required. Please use the AI Camera to scan your prescription.');
+        modal.classList.add('hidden');
+        $('#medicine-hub').scrollIntoView({ behavior: 'smooth' });
+      };
+    } else {
+      $('#med-buy-otc').onclick = () => {
+        openDeliveryModal(med);
+        modal.classList.add('hidden');
+      };
+    }
+  };
+
+  /* ============================================================
+     Medicine Delivery Customizer
+     ============================================================ */
+  const openDeliveryModal = (med) => {
+    const modal = $('#med-delivery-modal');
+    if (!modal) return;
+
+    $('#del-med-name').textContent = med.name;
+
+    const range = $('#del-days-range');
+    const valEl = $('#del-days-val');
+    if (range) {
+      range.value = 7;
+      valEl.textContent = '7 Days';
+      range.oninput = () => {
+        valEl.textContent = `${range.value} Days`;
+        updateDeliverySummary(med, +range.value);
+      };
+    }
+
+    updateDeliverySummary(med, 7);
+    modal.classList.remove('hidden');
+  };
+
+  const updateDeliverySummary = (med, days) => {
+    const summary = $('#del-summary');
+    if (!summary) return;
+
+    // Simulated quantity calculation (e.g., 1 unit per day)
+    const quantity = days * 1;
+    const pharmacy = 'Central Personnel Pharmacy';
+    const status = 'Pending Confirmation';
+
+    summary.innerHTML = `
+      <div class="del-summary-row">
+        <span class="del-summary-header">Medicine</span>
+        <span class="del-summary-header">Days</span>
+        <span class="del-summary-header">Qty</span>
+        <span class="del-summary-header">Pharmacy</span>
+        <span class="del-summary-header">Status</span>
+      </div>
+      <div class="del-summary-row">
+        <span>${med.name}</span>
+        <span>${days}</span>
+        <span>${quantity} unit(s)</span>
+        <span>${pharmacy}</span>
+        <span class="muted">${status}</span>
+      </div>
+    `;
+  };
+
+  const bindDeliveryHub = async () => {
+    const confirmBtn = $('#del-confirm-btn');
+    if (confirmBtn) {
+      confirmBtn.onclick = async () => {
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Processing...';
+        try {
+          // Simulate API call
+          await new Promise(r => setTimeout(r, 1500));
+          if (Math.random() < 0.1) throw new Error('Pharmacy system unavailable. Please try again later.');
+
+          showToast('Delivery request sent. Pharmacist will verify the quantity.');
+          $('#med-delivery-modal').classList.add('hidden');
+        } catch (e) {
+          showToast(e.message, false);
+        } finally {
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = 'Confirm Delivery';
+        }
+      };
+    }
+  };
+
+
+
+  const bindMedicineHub = () => {
+    const filters = $$('.med-filter-btn');
+    filters.forEach(btn => {
+      btn.onclick = () => {
+        filters.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderMedicineHub(btn.dataset.filter);
+      };
+    });
+
+    const scanBtn = $('#med-scan-btn');
+    if (scanBtn) {
+      scanBtn.onclick = () => {
+        showToast('Opening AI Prescription Camera...');
+        $('#rx-scan-modal').classList.remove('hidden');
+        setRxState('upload');
+      };
+    }
+
+    renderMedicineHub();
+  };
+
+  /* ============================================================
+     AI Prescription Camera
+     ============================================================ */
+  const setRxState = (state) => {
+    $$('.rx-state').forEach(el => el.classList.add('hidden'));
+    const target = $('#rx-state-' + state);
+    if (target) target.classList.remove('hidden');
+  };
+
+  const handleRxUpload = async (file) => {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('File too large. Maximum size is 5MB.', false);
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      showToast('Invalid file type. Please upload an image.', false);
+      return;
+    }
+
+    setRxState('processing');
+
+    try {
+      // Simulate OCR latency
+      await new Promise(r => setTimeout(r, 2500));
+
+      // Simulate a random failure for safety handling demonstration (10% chance)
+      if (Math.random() < 0.1) throw new Error('OCR engine failed to parse the image clearly.');
+
+      // Simulated OCR results
+      const detected = {
+        medicine: 'Alprazolam',
+        strength: '0.25 mg',
+        dosage: 'Once daily before bed',
+        duration: '14 days'
+      };
+
+      const infoGrid = $('#rx-detected-info');
+      if (infoGrid) {
+        infoGrid.innerHTML = Object.entries(detected).map(([k, v]) => `
+          <div class="rx-detected-item">
+            <div class="rx-detected-label">${k.replace('_',' ')}</div>
+            <div class="rx-detected-val">${v}</div>
+          </div>
+        `).join('');
+      }
+      setRxState('confirm');
+    } catch (e) {
+      showToast(e.message, false);
+      setRxState('upload');
+      // Adding a specific failure view would be better, but for now, we return to upload with a toast.
+    }
+  };
+
+
+  const handleRxVerify = async () => {
+    setRxState('verify');
+
+    // Simulate pharmacist verification time
+    await new Promise(r => setTimeout(r, 3000));
+
+    // Final results to display in result state
+    const finalDetails = {
+      medicine: 'Alprazolam',
+      strength: '0.25 mg',
+      dosage: 'Once daily',
+      duration: '14 days',
+      pharmacist: 'Dr. Sarah Jenkins (Reg #44910)',
+      status: 'Verified'
+    };
+
+    const detailsEl = $('#rx-final-details');
+    if (detailsEl) {
+      detailsEl.innerHTML = Object.entries(finalDetails).map(([k, v]) => `
+        <div class="rx-result-row">
+          <span class="rx-result-label">${k.replace('_',' ')}</span>
+          <span class="rx-result-val">${v}</span>
+        </div>
+      `).join('');
+    }
+    setRxState('result');
+  };
+
+  const bindRxScanner = () => {
+    const modal = $('#rx-scan-modal');
+    if (!modal) return;
+
+    const fileInput = $('#rx-file-input');
+    const dropZone = $('#rx-drop-zone');
+
+    if (dropZone) {
+      dropZone.onclick = () => fileInput.click();
+      dropZone.ondragover = (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--cyan)'; };
+      dropZone.ondragleave = () => { dropZone.style.borderColor = 'var(--border)'; };
+      dropZone.ondrop = (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = 'var(--border)';
+        const file = e.dataTransfer.files[0];
+        handleRxUpload(file);
+      };
+    }
+
+    if (fileInput) {
+      fileInput.onchange = () => {
+        const file = fileInput.files[0];
+        handleRxUpload(file);
+      };
+    }
+
+    $('#rx-rescan').onclick = () => setRxState('upload');
+    $('#rx-verify-send').onclick = handleRxVerify;
+    $('#rx-verify-cancel').onclick = () => {
+      showToast('Verification cancelled.');
+      setRxState('upload');
+    };
+    $('#rx-purchase-btn').onclick = () => {
+      showToast('Redirecting to secure payment for verified medication...');
+      modal.classList.add('hidden');
+    };
+  };
+
+
   const loadNotifications = async () => {
     if (!user) { $('#notif-list').innerHTML = '<div class="muted small">Sign in to see notifications.</div>'; $('#notif-dot')?.classList.add('hidden'); return; }
     try {
@@ -1962,30 +2391,42 @@ const App = (() => {
   };
   const bindNotifications = () => {
     let notifTaps = 0;
-    let lastNotifTap = 0;
+    let notifTimer = null;
 
-    $('#notif-btn').onclick = (e) => {
+    const bellBtn = $('#notif-btn');
+    if (!bellBtn) return;
+
+    bellBtn.addEventListener('pointerdown', (e) => {
       e.stopPropagation();
+      notifTaps++;
 
-      // Triple-tap detection for Soldier Mode
-      const now = Date.now();
-      if (now - lastNotifTap < 500) {
-        notifTaps++;
-      } else {
-        notifTaps = 1;
-      }
-      lastNotifTap = now;
+      if (notifTimer) clearTimeout(notifTimer);
 
-      if (notifTaps === 3) {
+      notifTimer = setTimeout(() => {
+        if (notifTaps === 3) {
+          // Triple-Tap: Soldier Mode Toggle Confirmation
+          const smModal = $('#soldier-mode-modal');
+          if (smModal) {
+            const title = smModal.querySelector('#sm-title');
+            const text = smModal.querySelector('p');
+            if (title) title.textContent = soldierMode ? 'Return to Normal Mode?' : 'Switch to Soldier Mode?';
+            if (text) text.textContent = soldierMode
+              ? 'This will disable specialized personnel tools and return you to the standard SYNAPSE interface.'
+              : 'This will enable specialized features for uniformed personnel including Duty Pressure checks, Longitudinal Trends, and Command Overviews.';
+
+            smModal.classList.remove('hidden');
+          }
+        } else if (notifTaps === 1) {
+          // Single Click: Notification Panel
+          const p = $('#notif-panel');
+          if (p) {
+            p.classList.toggle('hidden');
+            if (!p.classList.contains('hidden')) loadNotifications();
+          }
+        }
         notifTaps = 0;
-        $('#soldier-mode-modal').classList.remove('hidden');
-        return;
-      }
-
-      const p = $('#notif-panel');
-      p.classList.toggle('hidden');
-      if (!p.classList.contains('hidden')) loadNotifications();
-    };
+      }, 400);
+    });
 
     $('#notif-clear').onclick = async () => {
       try { await api('/notifications/read', { method:'POST', body: JSON.stringify({}) }); loadNotifications(); }
@@ -2104,6 +2545,48 @@ const App = (() => {
     m.classList.remove('hidden');
     m.addEventListener('click', (e) => { if (e.target === m) m.classList.add('hidden'); }, { once: true });
     m.querySelectorAll('[data-modal-close]').forEach(b => b.onclick = () => m.classList.add('hidden'));
+  };
+
+  const bindSoldierNav = () => {
+    const trigger = $('#soldier-more-trigger');
+    const panel = $('#soldier-nav-panel');
+    const backdrop = $('#soldier-nav-backdrop');
+    const closeBtn = $('#snp-close');
+
+    if (!trigger || !panel || !backdrop || !closeBtn) return;
+
+    const openPanel = () => {
+      panel.classList.add('active');
+      backdrop.classList.add('active');
+    };
+
+    const closePanel = () => {
+      panel.classList.remove('active');
+      backdrop.classList.remove('active');
+    };
+
+    trigger.onclick = (e) => {
+      e.preventDefault();
+      openPanel();
+    };
+
+    closeBtn.onclick = (e) => {
+      e.preventDefault();
+      closePanel();
+    };
+
+    backdrop.onclick = () => closePanel();
+
+    $$('#soldier-nav-panel a').forEach(link => {
+      link.onclick = () => closePanel();
+    });
+
+    // Close on ESC
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && panel.classList.contains('active')) {
+        closePanel();
+      }
+    });
   };
 
   /* ============================================================
@@ -2691,9 +3174,9 @@ const App = (() => {
   });
 
   const init = () => {
+    renderAuth();
     bindAuthOpen();
     bindAuthModal();
-    renderAuth();
     bindCheckin();
     bindChat();
     renderScreening();
@@ -2709,6 +3192,10 @@ const App = (() => {
     bindRoom();
     bindModals();
     bindSoldierModal();
+    bindMedicineHub();
+    bindRxScanner();
+    bindDeliveryHub();
+    bindSoldierNav();
     bindNav();
     bindQuickReset();
     updateSoldierModeUI();
